@@ -556,7 +556,7 @@
           const name = document.getElementById(`${type}-${r}-${time}-name`)?.value?.trim();
           const normal = document.getElementById(`${type}-${r}-${time}-normal`)?.value;
           const recovery = document.getElementById(`${type}-${r}-${time}-recovery`)?.value;
-          if (name) {
+          if (name && (NAME_LIST.length === 0 || NAME_LIST.includes(name))) {
             entries.push({ room: r, time, name, normal: Number(normal)||0, recovery: Number(recovery)||0 });
           }
         });
@@ -825,21 +825,24 @@
       if (normalEl) normalEl.focus();
     }
 
-    // 이름 유효성 검사 - 리스트에 없으면 빨간 테두리 + 포커스 벗어날 때 지움
+    // 이름 유효성 검사 - 리스트에 없으면 빨간 테두리 + 지움
     function validateNameInput(input) {
-      const val = input.value.trim();
-      if (!val) {
-        input.style.borderColor = '#ddd';
-        return;
-      }
-      if (NAME_LIST.length > 0 && !NAME_LIST.includes(val)) {
-        input.style.borderColor = '#e74c3c';
-        input.value = '';
-        input.placeholder = '리스트에서 선택';
-        setTimeout(() => { input.placeholder = '이름'; }, 1500);
-      } else {
-        input.style.borderColor = '#27ae60';
-      }
+      setTimeout(() => {
+        const val = input.value.trim();
+        if (!val) {
+          input.style.borderColor = '#ddd';
+          return;
+        }
+        if (NAME_LIST.length > 0 && !NAME_LIST.includes(val)) {
+          input.style.borderColor = '#e74c3c';
+          input.value = '';
+          input.style.borderColor = '#ddd';
+          input.placeholder = '리스트에서 선택!';
+          setTimeout(() => { input.placeholder = '이름'; }, 2000);
+        } else {
+          input.style.borderColor = '#27ae60';
+        }
+      }, 200);
     }
 
     function init() {
