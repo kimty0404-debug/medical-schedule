@@ -517,7 +517,7 @@
           const id = `${type}-${r}-${time}`;
           html += `<tr><td>${time}</td>
             <td class="autocomplete-wrapper">
-              <input type="text" id="${id}-name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" onblur="validateNameInput(this)" autocomplete="off">
+              <input type="text" id="${id}-name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" onchange="validateNameOnChange(this)" autocomplete="off">
               <div class="autocomplete-list" id="${id}-name-list"></div>
             </td>
             <td><input type="number" id="${id}-normal" min="0" value=""></td>
@@ -764,6 +764,17 @@
       const listEl = document.getElementById(listId);
       if (!listEl) return;
 
+      // 입력 중에는 테두리 색으로 유효성 표시
+      if (val && NAME_LIST.length > 0) {
+        if (NAME_LIST.includes(val)) {
+          input.style.borderColor = '#27ae60';
+        } else {
+          input.style.borderColor = '#e74c3c';
+        }
+      } else {
+        input.style.borderColor = '#ddd';
+      }
+
       if (!val) {
         listEl.classList.remove('show');
         activeAutocomplete = null;
@@ -784,7 +795,6 @@
       activeAutocomplete = { input, listEl, matches };
       selectedIndex = -1;
 
-      // 키보드 이벤트 (한 번만 등록)
       input.onkeydown = function(e) {
         const items = listEl.querySelectorAll('.autocomplete-item');
         if (e.key === 'ArrowDown') {
@@ -808,7 +818,7 @@
       };
 
       input.onblur = function() {
-        setTimeout(() => { listEl.classList.remove('show'); }, 150);
+        setTimeout(() => { listEl.classList.remove('show'); }, 200);
       };
     }
 
@@ -825,24 +835,15 @@
       if (normalEl) normalEl.focus();
     }
 
-    // 이름 유효성 검사 - 리스트에 없으면 빨간 테두리 + 지움
-    function validateNameInput(input) {
-      setTimeout(() => {
-        const val = input.value.trim();
-        if (!val) {
-          input.style.borderColor = '#ddd';
-          return;
-        }
-        if (NAME_LIST.length > 0 && !NAME_LIST.includes(val)) {
-          input.style.borderColor = '#e74c3c';
-          input.value = '';
-          input.style.borderColor = '#ddd';
-          input.placeholder = '리스트에서 선택!';
-          setTimeout(() => { input.placeholder = '이름'; }, 2000);
-        } else {
-          input.style.borderColor = '#27ae60';
-        }
-      }, 200);
+    // 이름 유효성 검사 - onchange (값이 확정될 때 실행)
+    function validateNameOnChange(input) {
+      const val = input.value.trim();
+      if (!val) { input.style.borderColor = '#ddd'; return; }
+      if (NAME_LIST.length === 0) return;
+      if (!NAME_LIST.includes(val)) {
+        input.value = '';
+        input.style.borderColor = '#ddd';
+      }
     }
 
     function init() {
