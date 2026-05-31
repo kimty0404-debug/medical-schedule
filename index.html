@@ -399,12 +399,73 @@
 
     // ===== 키보드 네비게이션 =====
     function handleKeyNav(event, input) {
+      const type = input.dataset.type;
+      const room = input.dataset.room;
+      const tidx = parseInt(input.dataset.tidx);
+      const field = input.dataset.field;
+
+      // 이름 칸: Enter → 아래 이름 칸으로
+      if (field === 'name') {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          // 자동완성 선택 중이면 selectName에서 이동 처리
+          if (activeAutocomplete && selectedIndex >= 0) {
+            const name = activeAutocomplete.matches[selectedIndex];
+            selectName(input.id, name);
+            return;
+          }
+          // 자동완성 목록이 열려있으면 닫기만
+          const listEl = document.getElementById(input.id + '-list');
+          if (listEl) listEl.classList.remove('show');
+          activeAutocomplete = null;
+          // 아래 이름 칸으로 이동
+          const nextTidx = tidx + 1;
+          if (nextTidx < TIME_SLOTS.length) {
+            const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
+            const nextEl = document.getElementById(nextId);
+            if (nextEl) nextEl.focus();
+          }
+        } else if (event.key === 'ArrowDown') {
+          if (activeAutocomplete) {
+            event.preventDefault();
+            const items = activeAutocomplete.listEl.querySelectorAll('.autocomplete-item');
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+          } else {
+            event.preventDefault();
+            const nextTidx = tidx + 1;
+            if (nextTidx < TIME_SLOTS.length) {
+              const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
+              const nextEl = document.getElementById(nextId);
+              if (nextEl) nextEl.focus();
+            }
+          }
+        } else if (event.key === 'ArrowUp') {
+          if (activeAutocomplete) {
+            event.preventDefault();
+            const items = activeAutocomplete.listEl.querySelectorAll('.autocomplete-item');
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+          } else {
+            event.preventDefault();
+            const prevTidx = tidx - 1;
+            if (prevTidx >= 0) {
+              const prevId = `${type}-${room}-${TIME_SLOTS[prevTidx]}-name`;
+              const prevEl = document.getElementById(prevId);
+              if (prevEl) prevEl.focus();
+            }
+          }
+        } else if (event.key === 'Escape' && activeAutocomplete) {
+          const listEl = document.getElementById(input.id + '-list');
+          if (listEl) listEl.classList.remove('show');
+          activeAutocomplete = null;
+        }
+        return;
+      }
+
+      // 숫자 칸 (일반/회복기/C): Enter/↓ → 아래 같은 칸, ↑ → 위 같은 칸
       if (event.key === 'Enter' || event.key === 'ArrowDown') {
         event.preventDefault();
-        const type = input.dataset.type;
-        const room = input.dataset.room;
-        const tidx = parseInt(input.dataset.tidx);
-        const field = input.dataset.field;
         const nextTidx = tidx + 1;
         if (nextTidx < TIME_SLOTS.length) {
           const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-${field}`;
@@ -413,10 +474,6 @@
         }
       } else if (event.key === 'ArrowUp') {
         event.preventDefault();
-        const type = input.dataset.type;
-        const room = input.dataset.room;
-        const tidx = parseInt(input.dataset.tidx);
-        const field = input.dataset.field;
         const prevTidx = tidx - 1;
         if (prevTidx >= 0) {
           const prevId = `${type}-${room}-${TIME_SLOTS[prevTidx]}-${field}`;
@@ -669,9 +726,35 @@
       const listEl = document.getElementById(inputId + '-list');
       if (listEl) listEl.classList.remove('show');
       activeAutocomplete = null;
-      const normalId = inputId.replace('-name', '-normal');
-      const normalEl = document.getElementById(normalId);
-      if (normalEl) normalEl.focus();
+      selectedIndex = -1;
+      // 선택 후 아래 이름 칸으로 이동
+      const tidx = parseInt(input.dataset.tidx);
+      const type = input.dataset.type;
+      const room = input.dataset.room;
+      const nextTidx = tidx + 1;
+      if (nextTidx < TIME_SLOTS.length) {
+        const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
+        const nextEl = document.getElementById(nextId);
+        if (nextEl) nextEl.focus();
+      }
+    }(inputId, name) {
+      const input = document.getElementById(inputId);
+      input.value = name;
+      input.style.borderColor = '#27ae60';
+      const listEl = document.getElementById(inputId + '-list');
+      if (listEl) listEl.classList.remove('show');
+      activeAutocomplete = null;
+      selectedIndex = -1;
+      // 선택 후 아래 이름 칸으로 이동
+      const tidx = parseInt(input.dataset.tidx);
+      const type = input.dataset.type;
+      const room = input.dataset.room;
+      const nextTidx = tidx + 1;
+      if (nextTidx < TIME_SLOTS.length) {
+        const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
+        const nextEl = document.getElementById(nextId);
+        if (nextEl) nextEl.focus();
+      }
     }
 
     function validateNameOnChange(input) {
