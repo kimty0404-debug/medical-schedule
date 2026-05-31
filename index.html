@@ -737,24 +737,6 @@
         const nextEl = document.getElementById(nextId);
         if (nextEl) nextEl.focus();
       }
-    }(inputId, name) {
-      const input = document.getElementById(inputId);
-      input.value = name;
-      input.style.borderColor = '#27ae60';
-      const listEl = document.getElementById(inputId + '-list');
-      if (listEl) listEl.classList.remove('show');
-      activeAutocomplete = null;
-      selectedIndex = -1;
-      // 선택 후 아래 이름 칸으로 이동
-      const tidx = parseInt(input.dataset.tidx);
-      const type = input.dataset.type;
-      const room = input.dataset.room;
-      const nextTidx = tidx + 1;
-      if (nextTidx < TIME_SLOTS.length) {
-        const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
-        const nextEl = document.getElementById(nextId);
-        if (nextEl) nextEl.focus();
-      }
     }
 
     function validateNameOnChange(input) {
