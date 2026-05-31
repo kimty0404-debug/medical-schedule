@@ -10,23 +10,24 @@
     
     .nav {
       background: #2c3e50;
-      padding: 12px 24px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
+      flex-wrap: wrap;
     }
-    .nav h1 { color: white; font-size: 18px; margin-right: 32px; }
+    .nav h1 { color: white; font-size: 16px; margin-right: 16px; }
     .nav button {
       background: transparent;
       color: #ecf0f1;
       border: 1px solid #7f8c8d;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 12px;
       transition: all 0.2s;
     }
     .nav button:hover, .nav button.active {
@@ -34,12 +35,228 @@
       border-color: #3498db;
       color: white;
     }
-    
+    .nav .sep {
+      color: #7f8c8d;
+      margin: 0 4px;
+    }
+</style>
+</head>
+<body>
+  <nav class="nav">
+    <h1>검사 스케줄</h1>
+    <button id="nav-4rft" onclick="showPage('4rft')">4층 RFT</button>
+    <button id="nav-4fes" onclick="showPage('4fes')">4층 FES</button>
+    <span class="sep">|</span>
+    <button id="nav-5rft" onclick="showPage('5rft')">5층 RFT</button>
+    <button id="nav-5fes" onclick="showPage('5fes')">5층 FES</button>
+    <span class="sep">|</span>
+    <button id="nav-admin4" onclick="showPage('admin4')">4층 관리</button>
+    <button id="nav-admin5" onclick="showPage('admin5')">5층 관리</button>
+    <button id="nav-all" onclick="showPage('all')">전체 보기</button>
+    <span class="sep">|</span>
+    <button id="nav-settings" onclick="showPage('settings')">설정</button>
+  </nav>
+
+  <div class="container">
+    <!-- 4층 RFT -->
+    <div id="page-4rft" class="page">
+      <div class="card">
+        <h2>4층 RFT 검사 입력 <span id="4rft-room-count"></span></h2>
+        <div id="4rft-rooms" class="rooms-grid"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveRoomData('4F_RFT')">저장</button>
+          <button class="btn btn-warning" onclick="loadRoomData('4F_RFT')">새로고침</button>
+        </div>
+        <div id="4rft-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 4층 FES -->
+    <div id="page-4fes" class="page">
+      <div class="card">
+        <h2>4층 FES 검사 입력 <span id="4fes-room-count"></span></h2>
+        <div id="4fes-rooms" class="rooms-grid"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveRoomData('4F_FES')">저장</button>
+          <button class="btn btn-warning" onclick="loadRoomData('4F_FES')">새로고침</button>
+        </div>
+        <div id="4fes-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 5층 RFT -->
+    <div id="page-5rft" class="page">
+      <div class="card">
+        <h2>5층 RFT 검사 입력 <span id="5rft-room-count"></span></h2>
+        <div id="5rft-rooms" class="rooms-grid"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveRoomData('5F_RFT')">저장</button>
+          <button class="btn btn-warning" onclick="loadRoomData('5F_RFT')">새로고침</button>
+        </div>
+        <div id="5rft-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 5층 FES -->
+    <div id="page-5fes" class="page">
+      <div class="card">
+        <h2>5층 FES 검사 입력 <span id="5fes-room-count"></span></h2>
+        <div id="5fes-rooms" class="rooms-grid"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveRoomData('5F_FES')">저장</button>
+          <button class="btn btn-warning" onclick="loadRoomData('5F_FES')">새로고침</button>
+        </div>
+        <div id="5fes-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 4층 관리자 -->
+    <div id="page-admin4" class="page">
+      <div class="card">
+        <h2>4층 RFT 집계</h2>
+        <div id="4rft-totals" class="totals-box"></div>
+        <div id="4rft-summary"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="loadSummary('4F_RFT')">집계 새로고침</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>4층 RFT EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-4f_rft-input" placeholder="김광현&#9;&#9;1&#9;&#9;1&#10;김대인&#9;1&#9;1&#9;1&#9;4"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveEMR('4F_RFT')">EMR 저장</button>
+          <button class="btn btn-warning" onclick="loadEMR('4F_RFT')">불러오기</button>
+        </div>
+        <div id="emr-4f_rft-status" class="status"></div>
+      </div>
+      <div class="card">
+        <h2>4층 FES 집계</h2>
+        <div id="4fes-totals" class="totals-box"></div>
+        <div id="4fes-summary"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="loadSummary('4F_FES')">집계 새로고침</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>4층 FES EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-4f_fes-input" placeholder="김지수&#9;&#9;3&#9;&#9;1&#10;김한길&#9;1&#9;3&#9;1&#9;2"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveEMR('4F_FES')">EMR 저장</button>
+          <button class="btn btn-warning" onclick="loadEMR('4F_FES')">불러오기</button>
+        </div>
+        <div id="emr-4f_fes-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 5층 관리자 -->
+    <div id="page-admin5" class="page">
+      <div class="card">
+        <h2>5층 RFT 집계</h2>
+        <div id="5rft-totals" class="totals-box"></div>
+        <div id="5rft-summary"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="loadSummary('5F_RFT')">집계 새로고침</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>5층 RFT EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-5f_rft-input" placeholder="김광현&#9;&#9;1&#9;&#9;1&#10;김대인&#9;1&#9;1&#9;1&#9;4"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveEMR('5F_RFT')">EMR 저장</button>
+          <button class="btn btn-warning" onclick="loadEMR('5F_RFT')">불러오기</button>
+        </div>
+        <div id="emr-5f_rft-status" class="status"></div>
+      </div>
+      <div class="card">
+        <h2>5층 FES 집계</h2>
+        <div id="5fes-totals" class="totals-box"></div>
+        <div id="5fes-summary"></div>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="loadSummary('5F_FES')">집계 새로고침</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>5층 FES EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-5f_fes-input" placeholder="김지수&#9;&#9;3&#9;&#9;1&#10;김한길&#9;1&#9;3&#9;1&#9;2"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="saveEMR('5F_FES')">EMR 저장</button>
+          <button class="btn btn-warning" onclick="loadEMR('5F_FES')">불러오기</button>
+        </div>
+        <div id="emr-5f_fes-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- 전체 보기 -->
+    <div id="page-all" class="page">
+      <div class="card">
+        <h2>4층 + 5층 전체 통합 집계</h2>
+        <div class="actions" style="margin-bottom:16px;">
+          <button class="btn btn-primary" onclick="loadAllSummary()">전체 집계 새로고침</button>
+        </div>
+        <h3>4층 RFT</h3>
+        <div id="all-4rft-totals" class="totals-box"></div>
+        <div id="all-4rft-summary"></div>
+      </div>
+      <div class="card">
+        <h3>4층 FES</h3>
+        <div id="all-4fes-totals" class="totals-box"></div>
+        <div id="all-4fes-summary"></div>
+      </div>
+      <div class="card">
+        <h3>5층 RFT</h3>
+        <div id="all-5rft-totals" class="totals-box"></div>
+        <div id="all-5rft-summary"></div>
+      </div>
+      <div class="card">
+        <h3>5층 FES</h3>
+        <div id="all-5fes-totals" class="totals-box"></div>
+        <div id="all-5fes-summary"></div>
+      </div>
+      <div class="card">
+        <h2>전체 합산</h2>
+        <div id="all-grand-totals" class="totals-box"></div>
+      </div>
+    </div>
+
+    <!-- 설정 -->
+    <div id="page-settings" class="page">
+      <div class="card">
+        <h2>시스템 설정</h2>
+        <div class="config-banner">
+          <strong>Google Apps Script URL 설정:</strong><br>
+          배포된 Google Apps Script 웹앱 URL을 입력하세요.
+        </div>
+        <div class="settings-form" style="margin-bottom:16px;">
+          <label>Apps Script URL:</label>
+          <input type="text" id="script-url" style="width:400px;" placeholder="https://script.google.com/macros/s/...../exec">
+          <button class="btn btn-primary" onclick="saveScriptUrl()">URL 저장</button>
+        </div>
+        <div class="settings-form">
+          <label>4층 RFT 룸 수:</label>
+          <input type="number" id="setting-4rft-rooms" min="1" max="10" value="6">
+          <label>4층 FES 룸 수:</label>
+          <input type="number" id="setting-4fes-rooms" min="1" max="10" value="3">
+        </div>
+        <div class="settings-form" style="margin-top:8px;">
+          <label>5층 RFT 룸 수:</label>
+          <input type="number" id="setting-5rft-rooms" min="1" max="10" value="6">
+          <label>5층 FES 룸 수:</label>
+          <input type="number" id="setting-5fes-rooms" min="1" max="10" value="3">
+          <button class="btn btn-success" onclick="saveAppSettings()">설정 저장</button>
+        </div>
+        <div id="settings-status" class="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <style>
     .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    
     .page { display: none; }
     .page.active { display: block; }
-    
     .card {
       background: white;
       border-radius: 8px;
@@ -49,13 +266,11 @@
     }
     .card h2 { margin-bottom: 16px; color: #2c3e50; font-size: 16px; }
     .card h3 { margin-bottom: 12px; color: #34495e; font-size: 14px; }
-    
     .rooms-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
-    
     .room-card {
       border: 1px solid #e0e0e0;
       border-radius: 6px;
@@ -69,11 +284,9 @@
       margin-bottom: 10px;
       font-size: 13px;
     }
-    
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     th, td { padding: 4px 6px; text-align: center; border: 1px solid #e0e0e0; }
     th { background: #f8f9fa; font-weight: 600; }
-    
     input[type="text"], input[type="number"] {
       width: 100%;
       padding: 4px;
@@ -84,7 +297,6 @@
     }
     input[type="number"] { width: 50px; }
     input:focus { outline: none; border-color: #3498db; }
-    
     .btn {
       padding: 8px 20px;
       border: none;
@@ -101,16 +313,13 @@
     .btn-danger:hover { background: #c0392b; }
     .btn-warning { background: #f39c12; color: white; }
     .btn-warning:hover { background: #d68910; }
-    
     .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-    
     .summary-table th { background: #2c3e50; color: white; }
     .error-cell { background: #ffebee !important; color: #c62828; font-weight: bold; }
     .ok-cell { background: #e8f5e9 !important; color: #2e7d32; }
-    
     .totals-box {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -120,16 +329,14 @@
       border-radius: 6px;
       text-align: center;
     }
-    .total-item .label { font-size: 12px; color: #7f8c8d; }
-    .total-item .value { font-size: 24px; font-weight: bold; color: #2c3e50; }
-    
-    .settings-form { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-    .settings-form label { font-size: 14px; color: #34495e; }
-    .settings-form input { width: 60px; padding: 6px; font-size: 14px; }
-    
+    .total-item .label { font-size: 11px; color: #7f8c8d; }
+    .total-item .value { font-size: 22px; font-weight: bold; color: #2c3e50; }
+    .settings-form { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .settings-form label { font-size: 13px; color: #34495e; }
+    .settings-form input[type="number"] { width: 60px; padding: 6px; font-size: 14px; }
     textarea {
       width: 100%;
-      min-height: 200px;
+      min-height: 150px;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -137,7 +344,7 @@
       font-size: 12px;
       resize: vertical;
     }
-    
+    .hint { font-size: 12px; color: #7f8c8d; margin-bottom: 8px; }
     .status {
       padding: 8px 12px;
       border-radius: 4px;
@@ -149,13 +356,6 @@
     .status.success { background: #d4edda; color: #155724; }
     .status.error { background: #f8d7da; color: #721c24; }
     .status.info { background: #d1ecf1; color: #0c5460; }
-    
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #7f8c8d;
-    }
-    
     .config-banner {
       background: #fff3cd;
       border: 1px solid #ffc107;
@@ -164,239 +364,100 @@
       margin-bottom: 16px;
       font-size: 13px;
     }
-    .config-banner code {
-      background: #f8f9fa;
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-
-    .sorted-list { margin-top: 12px; }
-    .sorted-list table { margin-top: 8px; }
   </style>
-</head>
-<body>
-  <nav class="nav">
-    <h1>검사 스케줄</h1>
-    <button id="nav-rft" onclick="showPage('rft')">RFT 입력</button>
-    <button id="nav-fes" onclick="showPage('fes')">FES 입력</button>
-    <button id="nav-admin" onclick="showPage('admin')">관리자</button>
-    <button id="nav-settings" onclick="showPage('settings')">설정</button>
-  </nav>
-
-  <div class="container">
-    <!-- RFT 입력 페이지 -->
-    <div id="page-rft" class="page">
-      <div class="card">
-        <h2>RFT 검사 입력 <span id="rft-room-count"></span></h2>
-        <div id="rft-rooms" class="rooms-grid"></div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="saveRoomData('RFT')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('RFT')">새로고침</button>
-        </div>
-        <div id="rft-status" class="status"></div>
-      </div>
-    </div>
-
-    <!-- FES 입력 페이지 -->
-    <div id="page-fes" class="page">
-      <div class="card">
-        <h2>FES 검사 입력 <span id="fes-room-count"></span></h2>
-        <div id="fes-rooms" class="rooms-grid"></div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="saveRoomData('FES')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('FES')">새로고침</button>
-        </div>
-        <div id="fes-status" class="status"></div>
-      </div>
-    </div>
-
-    <!-- 관리자 페이지 -->
-    <div id="page-admin" class="page">
-      <!-- RFT 관리 -->
-      <div class="card">
-        <h2>RFT 집계</h2>
-        <div id="rft-totals" class="totals-box"></div>
-        <div id="rft-summary"></div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="loadSummary('RFT')">집계 새로고침</button>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h2>RFT EMR 데이터 입력</h2>
-        <p style="font-size:12px;color:#7f8c8d;margin-bottom:8px;">형식: 이름[탭]일반[탭]회복기 (한 줄에 하나씩)</p>
-        <textarea id="emr-rft-input" placeholder="김광현&#9;1&#9;1&#10;김대인&#9;2&#9;5&#10;..."></textarea>
-        <div class="actions">
-          <button class="btn btn-success" onclick="saveEMR('RFT')">EMR 저장</button>
-          <button class="btn btn-warning" onclick="loadEMR('RFT')">불러오기</button>
-        </div>
-        <div id="emr-rft-status" class="status"></div>
-      </div>
-
-      <!-- FES 관리 -->
-      <div class="card">
-        <h2>FES 집계</h2>
-        <div id="fes-totals" class="totals-box"></div>
-        <div id="fes-summary"></div>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="loadSummary('FES')">집계 새로고침</button>
-        </div>
-      </div>
-      
-      <div class="card">
-        <h2>FES EMR 데이터 입력</h2>
-        <p style="font-size:12px;color:#7f8c8d;margin-bottom:8px;">형식: 이름[탭]일반[탭]회복기 (한 줄에 하나씩)</p>
-        <textarea id="emr-fes-input" placeholder="김지수&#9;3&#9;1&#10;김한길&#9;4&#9;3&#10;..."></textarea>
-        <div class="actions">
-          <button class="btn btn-success" onclick="saveEMR('FES')">EMR 저장</button>
-          <button class="btn btn-warning" onclick="loadEMR('FES')">불러오기</button>
-        </div>
-        <div id="emr-fes-status" class="status"></div>
-      </div>
-    </div>
-
-    <!-- 설정 페이지 -->
-    <div id="page-settings" class="page">
-      <div class="card">
-        <h2>시스템 설정</h2>
-        <div class="config-banner">
-          <strong>Google Apps Script URL 설정:</strong><br>
-          아래에 배포된 Google Apps Script 웹앱 URL을 입력하세요.
-        </div>
-        <div class="settings-form" style="margin-bottom:16px;">
-          <label>Apps Script URL:</label>
-          <input type="text" id="script-url" style="width:400px;" placeholder="https://script.google.com/macros/s/...../exec">
-          <button class="btn btn-primary" onclick="saveScriptUrl()">URL 저장</button>
-        </div>
-        <div class="settings-form">
-          <label>RFT 룸 수:</label>
-          <input type="number" id="setting-rft-rooms" min="1" max="10" value="6">
-          <label>FES 룸 수:</label>
-          <input type="number" id="setting-fes-rooms" min="1" max="10" value="3">
-          <button class="btn btn-success" onclick="saveAppSettings()">설정 저장</button>
-        </div>
-        <div id="settings-status" class="status"></div>
-      </div>
-      
-      <div class="card">
-        <h2>사용 방법</h2>
-        <ol style="font-size:14px;line-height:2;padding-left:20px;">
-          <li>Google 스프레드시트를 새로 만듭니다</li>
-          <li>확장 프로그램 → Apps Script를 엽니다</li>
-          <li>Code.gs 파일에 제공된 코드를 붙여넣습니다</li>
-          <li>스프레드시트 ID를 코드에 입력합니다</li>
-          <li>배포 → 새 배포 → 웹 앱으로 배포합니다</li>
-          <li>배포된 URL을 위 설정에 입력합니다</li>
-        </ol>
-      </div>
-    </div>
-  </div>
 
   <script>
-    // ===== 설정 =====
     const TIME_SLOTS = ['8:30','9:00','9:35','10:05','10:40','11:10','11:45','1:20','1:50','2:25','2:55','3:30','4:00'];
     let APP_SETTINGS = {
-      rftRooms: 6,
-      fesRooms: 3
+      '4rft': 6, '4fes': 3, '5rft': 6, '5fes': 3
     };
 
-    function getScriptUrl() {
-      return localStorage.getItem('scriptUrl') || '';
-    }
-
+    function getScriptUrl() { return localStorage.getItem('scriptUrl') || ''; }
     function saveScriptUrl() {
-      const url = document.getElementById('script-url').value.trim();
-      localStorage.setItem('scriptUrl', url);
-      showStatus('settings-status', 'URL이 저장되었습니다.', 'success');
+      localStorage.setItem('scriptUrl', document.getElementById('script-url').value.trim());
+      showStatus('settings-status', 'URL 저장됨', 'success');
     }
 
-    // ===== API 호출 =====
     async function apiCall(action, params = {}, postData = null) {
       const url = getScriptUrl();
-      if (!url) {
-        throw new Error('Apps Script URL이 설정되지 않았습니다. 설정 페이지에서 URL을 입력하세요.');
-      }
-
+      if (!url) throw new Error('Apps Script URL이 설정되지 않았습니다. 설정 탭에서 URL을 입력하세요.');
       let fetchUrl = `${url}?action=${action}`;
-      Object.entries(params).forEach(([key, val]) => {
-        fetchUrl += `&${key}=${encodeURIComponent(val)}`;
-      });
-
+      Object.entries(params).forEach(([k, v]) => { fetchUrl += `&${k}=${encodeURIComponent(v)}`; });
       const options = { method: 'GET' };
       if (postData) {
         options.method = 'POST';
         options.body = JSON.stringify(postData);
         options.headers = { 'Content-Type': 'text/plain' };
       }
-
       const response = await fetch(fetchUrl, options);
       const result = await response.json();
-      
       if (result.error) throw new Error(result.error);
       return result;
     }
 
-    // ===== 페이지 네비게이션 =====
     function showPage(page) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
       document.getElementById(`page-${page}`).classList.add('active');
       document.getElementById(`nav-${page}`).classList.add('active');
-
-      if (page === 'rft') loadRoomData('RFT');
-      if (page === 'fes') loadRoomData('FES');
-      if (page === 'admin') { loadSummary('RFT'); loadSummary('FES'); }
+      const typeMap = { '4rft':'4F_RFT', '4fes':'4F_FES', '5rft':'5F_RFT', '5fes':'5F_FES' };
+      if (typeMap[page]) loadRoomData(typeMap[page]);
+      if (page === 'admin4') { loadSummary('4F_RFT'); loadSummary('4F_FES'); }
+      if (page === 'admin5') { loadSummary('5F_RFT'); loadSummary('5F_FES'); }
+      if (page === 'all') loadAllSummary();
       if (page === 'settings') loadSettings();
     }
 
-    // ===== 상태 메시지 =====
-    function showStatus(id, message, type) {
+    function showStatus(id, msg, type) {
       const el = document.getElementById(id);
-      el.textContent = message;
+      if (!el) return;
+      el.textContent = msg;
       el.className = `status show ${type}`;
       setTimeout(() => el.classList.remove('show'), 3000);
     }
 
-    // ===== 룸 렌더링 =====
+    function getPageKey(type) {
+      // 4F_RFT -> 4rft, 5F_FES -> 5fes
+      return type.replace('F_','').toLowerCase();
+    }
+
+    function getRoomCount(type) {
+      const key = getPageKey(type);
+      return APP_SETTINGS[key] || 6;
+    }
+
+    function getRoomPrefix(type) {
+      return type.includes('RFT') ? 'R' : 'F';
+    }
+
     function renderRooms(type) {
-      const count = type === 'RFT' ? APP_SETTINGS.rftRooms : APP_SETTINGS.fesRooms;
-      const prefix = type === 'RFT' ? 'R' : 'F';
-      const containerId = type === 'RFT' ? 'rft-rooms' : 'fes-rooms';
-      const countId = type === 'RFT' ? 'rft-room-count' : 'fes-room-count';
-      
-      document.getElementById(countId).textContent = `(${count}개 룸)`;
-      
+      const count = getRoomCount(type);
+      const prefix = getRoomPrefix(type);
+      const pageKey = getPageKey(type);
+      const containerId = `${pageKey}-rooms`;
+      const countId = `${pageKey}-room-count`;
+
+      const countEl = document.getElementById(countId);
+      if (countEl) countEl.textContent = `(${count}개 룸)`;
+
       let html = '';
       for (let r = 1; r <= count; r++) {
-        html += `
-          <div class="room-card">
-            <h4>${prefix}${r}</h4>
-            <table>
-              <thead>
-                <tr><th>시간</th><th>이름</th><th>일반</th><th>회복기</th></tr>
-              </thead>
-              <tbody>
-        `;
+        html += `<div class="room-card"><h4>${prefix}${r}</h4><table>
+          <thead><tr><th>시간</th><th>이름</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
         TIME_SLOTS.forEach(time => {
-          html += `
-            <tr>
-              <td>${time}</td>
-              <td><input type="text" id="${type}-${r}-${time}-name" placeholder="이름"></td>
-              <td><input type="number" id="${type}-${r}-${time}-normal" min="0" value=""></td>
-              <td><input type="number" id="${type}-${r}-${time}-recovery" min="0" value=""></td>
-            </tr>
-          `;
+          const id = `${type}-${r}-${time}`;
+          html += `<tr><td>${time}</td>
+            <td><input type="text" id="${id}-name" placeholder="이름"></td>
+            <td><input type="number" id="${id}-normal" min="0" value=""></td>
+            <td><input type="number" id="${id}-recovery" min="0" value=""></td></tr>`;
         });
         html += '</tbody></table></div>';
       }
-      
       document.getElementById(containerId).innerHTML = html;
     }
 
-    // ===== 룸 데이터 로드 =====
     async function loadRoomData(type) {
       renderRooms(type);
-      
       try {
         const data = await apiCall('getRooms', { type });
         if (data.rooms) {
@@ -404,203 +465,179 @@
             const nameEl = document.getElementById(`${type}-${entry.room}-${entry.time}-name`);
             const normalEl = document.getElementById(`${type}-${entry.room}-${entry.time}-normal`);
             const recoveryEl = document.getElementById(`${type}-${entry.room}-${entry.time}-recovery`);
-            
             if (nameEl) nameEl.value = entry.name || '';
             if (normalEl) normalEl.value = entry.normal || '';
             if (recoveryEl) recoveryEl.value = entry.recovery || '';
           });
         }
-      } catch (e) {
-        console.log('데이터 로드 실패:', e.message);
-      }
+      } catch (e) { console.log('로드 실패:', e.message); }
     }
 
-    // ===== 룸 데이터 저장 =====
     async function saveRoomData(type) {
-      const count = type === 'RFT' ? APP_SETTINGS.rftRooms : APP_SETTINGS.fesRooms;
+      const count = getRoomCount(type);
+      const pageKey = getPageKey(type);
+      const statusId = `${pageKey}-status`;
       const entries = [];
-      const statusId = type === 'RFT' ? 'rft-status' : 'fes-status';
 
       for (let r = 1; r <= count; r++) {
         TIME_SLOTS.forEach(time => {
           const name = document.getElementById(`${type}-${r}-${time}-name`)?.value?.trim();
           const normal = document.getElementById(`${type}-${r}-${time}-normal`)?.value;
           const recovery = document.getElementById(`${type}-${r}-${time}-recovery`)?.value;
-          
           if (name) {
-            entries.push({
-              room: r,
-              time,
-              name,
-              normal: Number(normal) || 0,
-              recovery: Number(recovery) || 0
-            });
+            entries.push({ room: r, time, name, normal: Number(normal)||0, recovery: Number(recovery)||0 });
           }
         });
       }
 
       try {
         await apiCall('saveRoom', {}, { type, entries });
-        showStatus(statusId, '저장되었습니다!', 'success');
+        showStatus(statusId, '저장 완료!', 'success');
       } catch (e) {
         showStatus(statusId, '저장 실패: ' + e.message, 'error');
       }
     }
 
-    // ===== EMR 데이터 =====
     async function saveEMR(type) {
-      const textareaId = `emr-${type.toLowerCase()}-input`;
-      const statusId = `emr-${type.toLowerCase()}-status`;
-      const text = document.getElementById(textareaId).value.trim();
-      
-      if (!text) {
-        showStatus(statusId, 'EMR 데이터를 입력하세요.', 'error');
-        return;
-      }
+      const key = type.toLowerCase();
+      const text = document.getElementById(`emr-${key}-input`).value.trim();
+      const statusId = `emr-${key}-status`;
+      if (!text) { showStatus(statusId, 'EMR 데이터를 입력하세요.', 'error'); return; }
 
       const entries = [];
       text.split('\n').forEach(line => {
         const parts = line.split('\t');
-        if (parts.length >= 1 && parts[0].trim()) {
+        if (parts[0]?.trim()) {
+          // 4개 컬럼: 이름, 일반1, 일반2, 회복기1, 회복기2 → 자동 합산
+          const normal1 = Number(parts[1]) || 0;
+          const normal2 = Number(parts[2]) || 0;
+          const recovery1 = Number(parts[3]) || 0;
+          const recovery2 = Number(parts[4]) || 0;
           entries.push({
             name: parts[0].trim(),
-            normal: Number(parts[1]) || 0,
-            recovery: Number(parts[2]) || 0
+            normal: normal1 + normal2,
+            recovery: recovery1 + recovery2
           });
         }
       });
 
       try {
         await apiCall('saveEMR', {}, { type, entries });
-        showStatus(statusId, `EMR 데이터 ${entries.length}건 저장됨`, 'success');
-      } catch (e) {
-        showStatus(statusId, '저장 실패: ' + e.message, 'error');
-      }
+        showStatus(statusId, `EMR ${entries.length}건 저장됨 (일반1+일반2, 회복기1+회복기2 합산)`, 'success');
+      } catch (e) { showStatus(statusId, '저장 실패: ' + e.message, 'error'); }
     }
 
     async function loadEMR(type) {
-      const textareaId = `emr-${type.toLowerCase()}-input`;
-      const statusId = `emr-${type.toLowerCase()}-status`;
-
+      const key = type.toLowerCase();
+      const statusId = `emr-${key}-status`;
       try {
         const data = await apiCall('getEMR', { type });
         if (data.emr && data.emr.length > 0) {
-          const text = data.emr.map(e => `${e.name}\t${e.normal}\t${e.recovery}`).join('\n');
-          document.getElementById(textareaId).value = text;
+          document.getElementById(`emr-${key}-input`).value = data.emr.map(e => `${e.name}\t${e.normal}\t${e.recovery}`).join('\n');
           showStatus(statusId, '불러오기 완료', 'success');
-        } else {
-          showStatus(statusId, '저장된 EMR 데이터가 없습니다.', 'info');
-        }
-      } catch (e) {
-        showStatus(statusId, '불러오기 실패: ' + e.message, 'error');
-      }
+        } else { showStatus(statusId, '저장된 EMR 없음', 'info'); }
+      } catch (e) { showStatus(statusId, '실패: ' + e.message, 'error'); }
     }
 
-    // ===== 집계 =====
-    async function loadSummary(type) {
-      const summaryId = `${type.toLowerCase()}-summary`;
-      const totalsId = `${type.toLowerCase()}-totals`;
+    function renderTotals(containerId, totals) {
+      const t = totals;
+      document.getElementById(containerId).innerHTML = `
+        <div class="total-item"><div class="label">오전 일반</div><div class="value">${t.amNormal}</div></div>
+        <div class="total-item"><div class="label">오전 회복기</div><div class="value">${t.amRecovery}</div></div>
+        <div class="total-item"><div class="label">오후 일반</div><div class="value">${t.pmNormal}</div></div>
+        <div class="total-item"><div class="label">오후 회복기</div><div class="value">${t.pmRecovery}</div></div>
+        <div class="total-item"><div class="label">총 일반</div><div class="value" style="color:#2980b9">${t.totalNormal}</div></div>
+        <div class="total-item"><div class="label">총 회복기</div><div class="value" style="color:#27ae60">${t.totalRecovery}</div></div>
+      `;
+    }
 
+    function renderComparison(containerId, comparison) {
+      if (!comparison || comparison.length === 0) {
+        document.getElementById(containerId).innerHTML = '<p style="color:#7f8c8d;">데이터 없음</p>';
+        return;
+      }
+      let html = `<table class="summary-table"><thead><tr>
+        <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>일반 오류</th><th>회복기 오류</th>
+      </tr></thead><tbody>`;
+      comparison.forEach(row => {
+        if (row.roomNormal===0 && row.roomRecovery===0 && row.emrNormal===0 && row.emrRecovery===0) return;
+        const nc = row.normalError ? 'error-cell' : 'ok-cell';
+        const rc = row.recoveryError ? 'error-cell' : 'ok-cell';
+        html += `<tr><td><strong>${row.name}</strong></td><td>${row.roomNormal}</td><td>${row.roomRecovery}</td>
+          <td>${row.emrNormal}</td><td>${row.emrRecovery}</td>
+          <td class="${nc}">${row.normalError?'✗ 불일치':'✓'}</td>
+          <td class="${rc}">${row.recoveryError?'✗ 불일치':'✓'}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      document.getElementById(containerId).innerHTML = html;
+    }
+
+    async function loadSummary(type) {
+      const pageKey = getPageKey(type);
+      const totalsId = `${pageKey}-totals`;
+      const summaryId = `${pageKey}-summary`;
       try {
         const data = await apiCall('getSummary', { type });
-        
-        // 총합 표시
-        if (data.totals) {
-          const t = data.totals;
-          document.getElementById(totalsId).innerHTML = `
-            <div class="total-item"><div class="label">오전 일반</div><div class="value">${t.amNormal}</div></div>
-            <div class="total-item"><div class="label">오전 회복기</div><div class="value">${t.amRecovery}</div></div>
-            <div class="total-item"><div class="label">오후 일반</div><div class="value">${t.pmNormal}</div></div>
-            <div class="total-item"><div class="label">오후 회복기</div><div class="value">${t.pmRecovery}</div></div>
-            <div class="total-item"><div class="label">총 일반</div><div class="value" style="color:#2980b9">${t.totalNormal}</div></div>
-            <div class="total-item"><div class="label">총 회복기</div><div class="value" style="color:#27ae60">${t.totalRecovery}</div></div>
-          `;
-        }
-
-        // 비교 테이블
-        if (data.comparison && data.comparison.length > 0) {
-          let html = `
-            <table class="summary-table">
-              <thead>
-                <tr>
-                  <th>이름</th>
-                  <th>일반 (입력)</th>
-                  <th>회복기 (입력)</th>
-                  <th>일반 (EMR)</th>
-                  <th>회복기 (EMR)</th>
-                  <th>일반 오류</th>
-                  <th>회복기 오류</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
-          
-          data.comparison.forEach(row => {
-            if (row.roomNormal === 0 && row.roomRecovery === 0 && row.emrNormal === 0 && row.emrRecovery === 0) return;
-            
-            const normalClass = row.normalError ? 'error-cell' : 'ok-cell';
-            const recoveryClass = row.recoveryError ? 'error-cell' : 'ok-cell';
-            
-            html += `
-              <tr>
-                <td><strong>${row.name}</strong></td>
-                <td>${row.roomNormal}</td>
-                <td>${row.roomRecovery}</td>
-                <td>${row.emrNormal}</td>
-                <td>${row.emrRecovery}</td>
-                <td class="${normalClass}">${row.normalError ? '✗ 불일치' : '✓'}</td>
-                <td class="${recoveryClass}">${row.recoveryError ? '✗ 불일치' : '✓'}</td>
-              </tr>
-            `;
-          });
-          
-          html += '</tbody></table>';
-          document.getElementById(summaryId).innerHTML = html;
-        } else {
-          document.getElementById(summaryId).innerHTML = '<p style="color:#7f8c8d;">데이터가 없습니다. 룸 데이터를 먼저 입력하세요.</p>';
-        }
+        if (data.totals) renderTotals(totalsId, data.totals);
+        renderComparison(summaryId, data.comparison);
       } catch (e) {
-        document.getElementById(summaryId).innerHTML = `<p style="color:#e74c3c;">집계 실패: ${e.message}</p>`;
+        document.getElementById(summaryId).innerHTML = `<p style="color:#e74c3c;">${e.message}</p>`;
       }
     }
 
-    // ===== 설정 =====
+    async function loadAllSummary() {
+      const types = ['4F_RFT','4F_FES','5F_RFT','5F_FES'];
+      let grandNormal = 0, grandRecovery = 0;
+
+      for (const type of types) {
+        const pageKey = getPageKey(type);
+        try {
+          const data = await apiCall('getSummary', { type });
+          if (data.totals) {
+            renderTotals(`all-${pageKey}-totals`, data.totals);
+            grandNormal += data.totals.totalNormal;
+            grandRecovery += data.totals.totalRecovery;
+          }
+          renderComparison(`all-${pageKey}-summary`, data.comparison);
+        } catch (e) {
+          document.getElementById(`all-${pageKey}-summary`).innerHTML = `<p style="color:#e74c3c;">${e.message}</p>`;
+        }
+      }
+
+      document.getElementById('all-grand-totals').innerHTML = `
+        <div class="total-item"><div class="label">전체 일반 합계</div><div class="value" style="color:#8e44ad;font-size:28px;">${grandNormal}</div></div>
+        <div class="total-item"><div class="label">전체 회복기 합계</div><div class="value" style="color:#d35400;font-size:28px;">${grandRecovery}</div></div>
+        <div class="total-item"><div class="label">전체 총합</div><div class="value" style="color:#2c3e50;font-size:28px;">${grandNormal + grandRecovery}</div></div>
+      `;
+    }
+
     function loadSettings() {
-      const url = getScriptUrl();
-      document.getElementById('script-url').value = url;
-      document.getElementById('setting-rft-rooms').value = APP_SETTINGS.rftRooms;
-      document.getElementById('setting-fes-rooms').value = APP_SETTINGS.fesRooms;
+      document.getElementById('script-url').value = getScriptUrl();
+      document.getElementById('setting-4rft-rooms').value = APP_SETTINGS['4rft'];
+      document.getElementById('setting-4fes-rooms').value = APP_SETTINGS['4fes'];
+      document.getElementById('setting-5rft-rooms').value = APP_SETTINGS['5rft'];
+      document.getElementById('setting-5fes-rooms').value = APP_SETTINGS['5fes'];
     }
 
     async function saveAppSettings() {
-      const rftRooms = Number(document.getElementById('setting-rft-rooms').value) || 6;
-      const fesRooms = Number(document.getElementById('setting-fes-rooms').value) || 3;
-      
-      APP_SETTINGS.rftRooms = rftRooms;
-      APP_SETTINGS.fesRooms = fesRooms;
-      
+      APP_SETTINGS['4rft'] = Number(document.getElementById('setting-4rft-rooms').value) || 6;
+      APP_SETTINGS['4fes'] = Number(document.getElementById('setting-4fes-rooms').value) || 3;
+      APP_SETTINGS['5rft'] = Number(document.getElementById('setting-5rft-rooms').value) || 6;
+      APP_SETTINGS['5fes'] = Number(document.getElementById('setting-5fes-rooms').value) || 3;
       localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
-
       try {
-        await apiCall('saveSettings', {}, { rftRooms, fesRooms });
-        showStatus('settings-status', '설정이 저장되었습니다.', 'success');
+        await apiCall('saveSettings', {}, APP_SETTINGS);
+        showStatus('settings-status', '설정 저장 완료', 'success');
       } catch (e) {
-        // 로컬에는 저장됨
-        showStatus('settings-status', '로컬 저장 완료 (서버 저장 실패: ' + e.message + ')', 'info');
+        showStatus('settings-status', '로컬 저장됨 (서버: ' + e.message + ')', 'info');
       }
     }
 
-    // ===== 초기화 =====
     function init() {
-      // 로컬 설정 로드
       const saved = localStorage.getItem('appSettings');
-      if (saved) {
-        APP_SETTINGS = JSON.parse(saved);
-      }
-      
-      showPage('rft');
+      if (saved) APP_SETTINGS = JSON.parse(saved);
+      showPage('4rft');
     }
-
     init();
   </script>
 </body>
