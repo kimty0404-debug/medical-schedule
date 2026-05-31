@@ -128,7 +128,7 @@
       </div>
       <div class="card">
         <h2>4층 RFT EMR 데이터</h2>
-        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2[탭]C (EMR에서 그대로 붙여넣기)</p>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]C[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
         <textarea id="emr-4f_rft-input" placeholder="김광현&#9;&#9;1&#9;&#9;1&#9;0&#10;김대인&#9;1&#9;1&#9;1&#9;4&#9;2"></textarea>
         <div class="actions">
           <button class="btn btn-success" onclick="saveEMR('4F_RFT')">EMR 저장</button>
@@ -167,7 +167,7 @@
       </div>
       <div class="card">
         <h2>5층 RFT EMR 데이터</h2>
-        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]회복기1[탭]회복기2[탭]C (EMR에서 그대로 붙여넣기)</p>
+        <p class="hint">형식: 이름[탭]일반1[탭]일반2[탭]C[탭]회복기1[탭]회복기2 (EMR에서 그대로 붙여넣기)</p>
         <textarea id="emr-5f_rft-input" placeholder="김광현&#9;&#9;1&#9;&#9;1&#9;0"></textarea>
         <div class="actions">
           <button class="btn btn-success" onclick="saveEMR('5F_RFT')">EMR 저장</button>
@@ -573,15 +573,26 @@
       const statusId = `emr-${key}-status`;
       if (!text) { showStatus(statusId, 'EMR 데이터를 입력하세요.', 'error'); return; }
       const entries = [];
+      const isRFT = type.includes('RFT');
       text.split('\n').forEach(line => {
         const parts = line.split('\t');
         if (parts[0]?.trim()) {
-          const normal1 = Number(parts[1]) || 0;
-          const normal2 = Number(parts[2]) || 0;
-          const recovery1 = Number(parts[3]) || 0;
-          const recovery2 = Number(parts[4]) || 0;
-          const complex = Number(parts[5]) || 0;
-          entries.push({ name: parts[0].trim(), normal: normal1 + normal2, recovery: recovery1 + recovery2, complex });
+          if (isRFT) {
+            // RFT: 이름, 일반1, 일반2, C, 회복기1, 회복기2
+            const normal1 = Number(parts[1]) || 0;
+            const normal2 = Number(parts[2]) || 0;
+            const complex = Number(parts[3]) || 0;
+            const recovery1 = Number(parts[4]) || 0;
+            const recovery2 = Number(parts[5]) || 0;
+            entries.push({ name: parts[0].trim(), normal: normal1 + normal2, recovery: recovery1 + recovery2, complex });
+          } else {
+            // FES: 이름, 일반1, 일반2, 회복기1, 회복기2
+            const normal1 = Number(parts[1]) || 0;
+            const normal2 = Number(parts[2]) || 0;
+            const recovery1 = Number(parts[3]) || 0;
+            const recovery2 = Number(parts[4]) || 0;
+            entries.push({ name: parts[0].trim(), normal: normal1 + normal2, recovery: recovery1 + recovery2, complex: 0 });
+          }
         }
       });
       entries.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
@@ -628,7 +639,7 @@
       let html;
       if (isRFT) {
         html = `<table class="summary-table"><thead><tr>
-          <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>C(입력)</th><th>합계</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>C(EMR)</th><th>일반</th><th>회복기</th><th>C</th>
+          <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>합계</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
         </tr></thead><tbody>`;
       } else {
         html = `<table class="summary-table"><thead><tr>
@@ -646,11 +657,11 @@
         totalEmrN += row.emrNormal; totalEmrR += row.emrRecovery; totalEmrC += row.emrComplex;
         if (isRFT) {
           html += `<tr><td><strong>${row.name}</strong></td>
-            <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td>${row.roomComplex}</td><td><strong>${roomTotal}</strong></td>
-            <td>${row.emrNormal}</td><td>${row.emrRecovery}</td><td>${row.emrComplex}</td>
+            <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
+            <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
             <td class="${nc}">${row.normalError?'✗':'✓'}</td>
-            <td class="${rc}">${row.recoveryError?'✗':'✓'}</td>
-            <td class="${cc}">${row.complexError?'✗':'✓'}</td></tr>`;
+            <td class="${cc}">${row.complexError?'✗':'✓'}</td>
+            <td class="${rc}">${row.recoveryError?'✗':'✓'}</td></tr>`;
         } else {
           html += `<tr><td><strong>${row.name}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
@@ -662,8 +673,8 @@
       const grandTotal = totalRoomN + totalRoomR + (isRFT ? totalRoomC : 0);
       if (isRFT) {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
-          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td><td>${totalRoomC}</td><td>${grandTotal}</td>
-          <td>${totalEmrN}</td><td>${totalEmrR}</td><td>${totalEmrC}</td><td></td><td></td><td></td></tr>`;
+          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomC}</td><td>${totalRoomR}</td><td>${grandTotal}</td>
+          <td>${totalEmrN}</td><td>${totalEmrC}</td><td>${totalEmrR}</td><td></td><td></td><td></td></tr>`;
       } else {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
           <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td><td>${grandTotal}</td>
