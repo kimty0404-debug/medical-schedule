@@ -517,7 +517,7 @@
           const id = `${type}-${r}-${time}`;
           html += `<tr><td>${time}</td>
             <td class="autocomplete-wrapper">
-              <input type="text" id="${id}-name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" autocomplete="off">
+              <input type="text" id="${id}-name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" onblur="validateNameInput(this)" autocomplete="off">
               <div class="autocomplete-list" id="${id}-name-list"></div>
             </td>
             <td><input type="number" id="${id}-normal" min="0" value=""></td>
@@ -815,6 +815,7 @@
     function selectName(inputId, name) {
       const input = document.getElementById(inputId);
       input.value = name;
+      input.style.borderColor = '#27ae60';
       const listEl = document.getElementById(inputId + '-list');
       if (listEl) listEl.classList.remove('show');
       activeAutocomplete = null;
@@ -822,6 +823,23 @@
       const normalId = inputId.replace('-name', '-normal');
       const normalEl = document.getElementById(normalId);
       if (normalEl) normalEl.focus();
+    }
+
+    // 이름 유효성 검사 - 리스트에 없으면 빨간 테두리 + 포커스 벗어날 때 지움
+    function validateNameInput(input) {
+      const val = input.value.trim();
+      if (!val) {
+        input.style.borderColor = '#ddd';
+        return;
+      }
+      if (NAME_LIST.length > 0 && !NAME_LIST.includes(val)) {
+        input.style.borderColor = '#e74c3c';
+        input.value = '';
+        input.placeholder = '리스트에서 선택';
+        setTimeout(() => { input.placeholder = '이름'; }, 1500);
+      } else {
+        input.style.borderColor = '#27ae60';
+      }
     }
 
     function init() {
