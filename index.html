@@ -469,6 +469,14 @@
           const listEl = document.getElementById(input.id + '-list');
           if (listEl) listEl.classList.remove('show');
           activeAutocomplete = null;
+        } else if (event.key === 'ArrowRight') {
+          // 커서가 텍스트 끝에 있으면 일반 칸으로 이동
+          if (input.selectionStart === input.value.length) {
+            event.preventDefault();
+            const nextId = `${type}-${room}-${TIME_SLOTS[tidx]}-normal`;
+            const nextEl = document.getElementById(nextId);
+            if (nextEl) nextEl.focus();
+          }
         }
         return;
       }
