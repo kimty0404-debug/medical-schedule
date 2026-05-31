@@ -1,0 +1,9 @@
+{
+  "name": "medical-schedule",
+  "version": "1.0.0",
+  "description": "의료 검사 스케줄 관리 시스템",
+  "scripts": {
+    "start": "npx serve public",
+    "dev": "npx serve public"
+  }
+}
