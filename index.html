@@ -473,7 +473,7 @@
         return;
       }
 
-      // 숫자 칸 (일반/회복기/C): Enter/↓ → 아래 같은 칸, ↑ → 위 같은 칸
+      // 숫자 칸 (일반/회복기/C): Enter/↓ → 아래 같은 칸, ↑ → 위 같은 칸, ←→ → 옆 칸
       if (event.key === 'Enter' || event.key === 'ArrowDown') {
         event.preventDefault();
         const nextTidx = tidx + 1;
@@ -487,6 +487,26 @@
         const prevTidx = tidx - 1;
         if (prevTidx >= 0) {
           const prevId = `${type}-${room}-${TIME_SLOTS[prevTidx]}-${field}`;
+          const prevEl = document.getElementById(prevId);
+          if (prevEl) prevEl.focus();
+        }
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        const fields = ['name','normal','recovery','complex'];
+        const fi = fields.indexOf(field);
+        if (fi < fields.length - 1) {
+          const nextField = fields[fi + 1];
+          const nextId = `${type}-${room}-${TIME_SLOTS[tidx]}-${nextField}`;
+          const nextEl = document.getElementById(nextId);
+          if (nextEl) nextEl.focus();
+        }
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        const fields = ['name','normal','recovery','complex'];
+        const fi = fields.indexOf(field);
+        if (fi > 0) {
+          const prevField = fields[fi - 1];
+          const prevId = `${type}-${room}-${TIME_SLOTS[tidx]}-${prevField}`;
           const prevEl = document.getElementById(prevId);
           if (prevEl) prevEl.focus();
         }
@@ -594,20 +614,28 @@
         return;
       }
       let html = `<table class="summary-table"><thead><tr>
-        <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>C(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>C(EMR)</th><th>일반</th><th>회복기</th><th>C</th>
+        <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>C(입력)</th><th>합계</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>C(EMR)</th><th>일반</th><th>회복기</th><th>C</th>
       </tr></thead><tbody>`;
+      let totalRoomN=0, totalRoomR=0, totalRoomC=0, totalEmrN=0, totalEmrR=0, totalEmrC=0;
       comparison.forEach(row => {
         if (row.roomNormal===0 && row.roomRecovery===0 && row.roomComplex===0 && row.emrNormal===0 && row.emrRecovery===0 && row.emrComplex===0) return;
         const nc = row.normalError ? 'error-cell' : 'ok-cell';
         const rc = row.recoveryError ? 'error-cell' : 'ok-cell';
         const cc = row.complexError ? 'error-cell' : 'ok-cell';
+        const roomTotal = row.roomNormal + row.roomRecovery + row.roomComplex;
+        totalRoomN += row.roomNormal; totalRoomR += row.roomRecovery; totalRoomC += row.roomComplex;
+        totalEmrN += row.emrNormal; totalEmrR += row.emrRecovery; totalEmrC += row.emrComplex;
         html += `<tr><td><strong>${row.name}</strong></td>
-          <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td>${row.roomComplex}</td>
+          <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td>${row.roomComplex}</td><td><strong>${roomTotal}</strong></td>
           <td>${row.emrNormal}</td><td>${row.emrRecovery}</td><td>${row.emrComplex}</td>
           <td class="${nc}">${row.normalError?'✗':'✓'}</td>
           <td class="${rc}">${row.recoveryError?'✗':'✓'}</td>
           <td class="${cc}">${row.complexError?'✗':'✓'}</td></tr>`;
       });
+      const grandTotal = totalRoomN + totalRoomR + totalRoomC;
+      html += `<tr style="background:#f0f0f0;font-weight:bold;">
+        <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td><td>${totalRoomC}</td><td>${grandTotal}</td>
+        <td>${totalEmrN}</td><td>${totalEmrR}</td><td>${totalEmrC}</td><td></td><td></td><td></td></tr>`;
       html += '</tbody></table>';
       document.getElementById(containerId).innerHTML = html;
     }
