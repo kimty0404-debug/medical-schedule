@@ -250,6 +250,17 @@
         </div>
         <div id="settings-status" class="status"></div>
       </div>
+
+      <div class="card">
+        <h2>검사자 이름 리스트 관리</h2>
+        <p class="hint">여기에 등록된 이름이 룸 입력 시 자동완성으로 표시됩니다.</p>
+        <div class="settings-form" style="margin-bottom:12px;">
+          <input type="text" id="new-name-input" placeholder="새 이름 입력" style="width:150px;padding:6px;" onkeydown="if(event.key==='Enter')addName()">
+          <button class="btn btn-success" onclick="addName()">추가</button>
+        </div>
+        <div id="name-list" class="name-list"></div>
+        <div id="name-list-status" class="status"></div>
+      </div>
     </div>
   </div>
 
@@ -364,6 +375,64 @@
       margin-bottom: 16px;
       font-size: 13px;
     }
+    .name-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .name-tag {
+      background: #e8f4fd;
+      border: 1px solid #bee5eb;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .name-tag .remove-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .name-tag .remove-btn:hover { background: #c0392b; }
+    .autocomplete-wrapper {
+      position: relative;
+    }
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #3498db;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 200;
+      display: none;
+    }
+    .autocomplete-list.show { display: block; }
+    .autocomplete-item {
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .autocomplete-item:hover, .autocomplete-item.selected {
+      background: #3498db;
+      color: white;
+    }
   </style>
 
   <script>
@@ -447,7 +516,10 @@
         TIME_SLOTS.forEach(time => {
           const id = `${type}-${r}-${time}`;
           html += `<tr><td>${time}</td>
-            <td><input type="text" id="${id}-name" placeholder="이름"></td>
+            <td class="autocomplete-wrapper">
+              <input type="text" id="${id}-name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" autocomplete="off">
+              <div class="autocomplete-list" id="${id}-name-list"></div>
+            </td>
             <td><input type="number" id="${id}-normal" min="0" value=""></td>
             <td><input type="number" id="${id}-recovery" min="0" value=""></td></tr>`;
         });
@@ -520,6 +592,9 @@
           });
         }
       });
+
+      // 가나다순 정렬
+      entries.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
       try {
         await apiCall('saveEMR', {}, { type, entries });
@@ -633,9 +708,126 @@
       }
     }
 
+    // ===== 이름 리스트 관리 =====
+    let NAME_LIST = [];
+
+    function loadNameList() {
+      const saved = localStorage.getItem('nameList');
+      if (saved) NAME_LIST = JSON.parse(saved);
+      renderNameList();
+    }
+
+    function saveNameList() {
+      localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
+      renderNameList();
+      // 서버에도 저장 시도
+      try { apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') }); } catch(e) {}
+    }
+
+    function renderNameList() {
+      const container = document.getElementById('name-list');
+      if (!container) return;
+      container.innerHTML = NAME_LIST.map((name, i) => 
+        `<span class="name-tag">${name}<button class="remove-btn" onclick="removeName(${i})">✕</button></span>`
+      ).join('');
+    }
+
+    function addName() {
+      const input = document.getElementById('new-name-input');
+      const name = input.value.trim();
+      if (!name) return;
+      if (NAME_LIST.includes(name)) {
+        showStatus('name-list-status', '이미 등록된 이름입니다.', 'error');
+        return;
+      }
+      NAME_LIST.push(name);
+      NAME_LIST.sort();
+      saveNameList();
+      input.value = '';
+      showStatus('name-list-status', `"${name}" 추가됨`, 'success');
+    }
+
+    function removeName(index) {
+      const name = NAME_LIST[index];
+      NAME_LIST.splice(index, 1);
+      saveNameList();
+      showStatus('name-list-status', `"${name}" 삭제됨`, 'info');
+    }
+
+    // ===== 자동완성 =====
+    let activeAutocomplete = null;
+    let selectedIndex = -1;
+
+    function onNameInput(input) {
+      const val = input.value.trim();
+      const listId = input.id + '-list';
+      const listEl = document.getElementById(listId);
+      if (!listEl) return;
+
+      if (!val) {
+        listEl.classList.remove('show');
+        activeAutocomplete = null;
+        return;
+      }
+
+      const matches = NAME_LIST.filter(name => name.includes(val));
+      if (matches.length === 0 || (matches.length === 1 && matches[0] === val)) {
+        listEl.classList.remove('show');
+        activeAutocomplete = null;
+        return;
+      }
+
+      listEl.innerHTML = matches.map((name, i) => 
+        `<div class="autocomplete-item" onmousedown="selectName('${input.id}', '${name}')">${name}</div>`
+      ).join('');
+      listEl.classList.add('show');
+      activeAutocomplete = { input, listEl, matches };
+      selectedIndex = -1;
+
+      // 키보드 이벤트 (한 번만 등록)
+      input.onkeydown = function(e) {
+        const items = listEl.querySelectorAll('.autocomplete-item');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+          items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedIndex = Math.max(selectedIndex - 1, 0);
+          items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (selectedIndex >= 0 && items[selectedIndex]) {
+            const name = activeAutocomplete.matches[selectedIndex];
+            selectName(input.id, name);
+          }
+        } else if (e.key === 'Escape') {
+          listEl.classList.remove('show');
+          activeAutocomplete = null;
+        }
+      };
+
+      input.onblur = function() {
+        setTimeout(() => { listEl.classList.remove('show'); }, 150);
+      };
+    }
+
+    function selectName(inputId, name) {
+      const input = document.getElementById(inputId);
+      input.value = name;
+      const listEl = document.getElementById(inputId + '-list');
+      if (listEl) listEl.classList.remove('show');
+      activeAutocomplete = null;
+      // 다음 입력칸(일반)으로 포커스 이동
+      const normalId = inputId.replace('-name', '-normal');
+      const normalEl = document.getElementById(normalId);
+      if (normalEl) normalEl.focus();
+    }
+
     function init() {
       const saved = localStorage.getItem('appSettings');
       if (saved) APP_SETTINGS = JSON.parse(saved);
+      loadNameList();
       showPage('4rft');
     }
     init();
