@@ -408,16 +408,23 @@
       if (field === 'name') {
         if (event.key === 'Enter') {
           event.preventDefault();
-          // 자동완성 선택 중이면 selectName에서 이동 처리
+          // 자동완성 선택 중이면 선택만 하고 끝
           if (activeAutocomplete && selectedIndex >= 0) {
             const name = activeAutocomplete.matches[selectedIndex];
-            selectName(input.id, name);
+            const input2 = document.getElementById(input.id);
+            input2.value = name;
+            input2.style.borderColor = '#27ae60';
+            const listEl = document.getElementById(input.id + '-list');
+            if (listEl) listEl.classList.remove('show');
+            activeAutocomplete = null;
+            selectedIndex = -1;
             return;
           }
-          // 자동완성 목록이 열려있으면 닫기만
+          // 자동완성 닫기
           const listEl = document.getElementById(input.id + '-list');
           if (listEl) listEl.classList.remove('show');
           activeAutocomplete = null;
+          selectedIndex = -1;
           // 아래 이름 칸으로 이동
           const nextTidx = tidx + 1;
           if (nextTidx < TIME_SLOTS.length) {
@@ -727,16 +734,7 @@
       if (listEl) listEl.classList.remove('show');
       activeAutocomplete = null;
       selectedIndex = -1;
-      // 선택 후 아래 이름 칸으로 이동
-      const tidx = parseInt(input.dataset.tidx);
-      const type = input.dataset.type;
-      const room = input.dataset.room;
-      const nextTidx = tidx + 1;
-      if (nextTidx < TIME_SLOTS.length) {
-        const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
-        const nextEl = document.getElementById(nextId);
-        if (nextEl) nextEl.focus();
-      }
+      // 선택 후 포커스 유지 (Enter로 이동은 handleKeyNav에서 처리)
     }
 
     function validateNameOnChange(input) {
