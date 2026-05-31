@@ -384,7 +384,7 @@
           html += `<tr>
             <td>${time}</td>
             <td class="autocomplete-wrapper">
-              <input type="text" id="${id}-name" data-type="${type}" data-room="${r}" data-tidx="${ti}" data-field="name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" onchange="validateNameOnChange(this)" onkeydown="handleKeyNav(event, this)" autocomplete="off">
+              <input type="text" id="${id}-name" data-type="${type}" data-room="${r}" data-tidx="${ti}" data-field="name" placeholder="이름" oninput="onNameInput(this)" onfocus="onNameInput(this)" onblur="validateNameOnBlur(this)" onkeydown="handleKeyNav(event, this)" autocomplete="off">
               <div class="autocomplete-list" id="${id}-name-list"></div>
             </td>
             <td><input type="number" id="${id}-normal" data-type="${type}" data-room="${r}" data-tidx="${ti}" data-field="normal" min="0" value="" onkeydown="handleKeyNav(event, this)"></td>
@@ -408,6 +408,7 @@
       if (field === 'name') {
         if (event.key === 'Enter') {
           event.preventDefault();
+          event.stopPropagation();
           // 자동완성 선택 중이면 선택만 하고 끝
           if (activeAutocomplete && selectedIndex >= 0) {
             const name = activeAutocomplete.matches[selectedIndex];
@@ -425,13 +426,15 @@
           if (listEl) listEl.classList.remove('show');
           activeAutocomplete = null;
           selectedIndex = -1;
-          // 아래 이름 칸으로 이동
-          const nextTidx = tidx + 1;
-          if (nextTidx < TIME_SLOTS.length) {
-            const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
-            const nextEl = document.getElementById(nextId);
-            if (nextEl) nextEl.focus();
-          }
+          // 아래 이름 칸으로 이동 (setTimeout으로 다른 이벤트와 분리)
+          setTimeout(() => {
+            const nextTidx = tidx + 1;
+            if (nextTidx < TIME_SLOTS.length) {
+              const nextId = `${type}-${room}-${TIME_SLOTS[nextTidx]}-name`;
+              const nextEl = document.getElementById(nextId);
+              if (nextEl) nextEl.focus();
+            }
+          }, 10);
         } else if (event.key === 'ArrowDown') {
           if (activeAutocomplete) {
             event.preventDefault();
@@ -737,14 +740,16 @@
       // 선택 후 포커스 유지 (Enter로 이동은 handleKeyNav에서 처리)
     }
 
-    function validateNameOnChange(input) {
-      const val = input.value.trim();
-      if (!val) { input.style.borderColor = '#ddd'; return; }
-      if (NAME_LIST.length === 0) return;
-      if (!NAME_LIST.includes(val)) {
-        input.value = '';
-        input.style.borderColor = '#ddd';
-      }
+    function validateNameOnBlur(input) {
+      setTimeout(() => {
+        const val = input.value.trim();
+        if (!val) { input.style.borderColor = '#ddd'; return; }
+        if (NAME_LIST.length === 0) return;
+        if (!NAME_LIST.includes(val)) {
+          input.value = '';
+          input.style.borderColor = '#ddd';
+        }
+      }, 300);
     }
 
     // ===== 초기화 =====
