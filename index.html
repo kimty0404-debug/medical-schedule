@@ -662,15 +662,17 @@
         const roomTotal = row.roomNormal + row.roomRecovery + (isRFT ? row.roomComplex : 0);
         totalRoomN += row.roomNormal; totalRoomR += row.roomRecovery; totalRoomC += row.roomComplex;
         totalEmrN += row.emrNormal; totalEmrR += row.emrRecovery; totalEmrC += row.emrComplex;
+        const rowStyle = row.missingInRoom ? ' style="background:#fff3cd;"' : '';
+        const nameLabel = row.missingInRoom ? `${row.name} ⚠️` : row.name;
         if (isRFT) {
-          html += `<tr><td><strong>${row.name}</strong></td>
+          html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
             <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
             <td class="${nc}">${row.normalError?'오류':'O'}</td>
             <td class="${cc}">${row.complexError?'오류':'O'}</td>
             <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
         } else {
-          html += `<tr><td><strong>${row.name}</strong></td>
+          html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
             <td>${row.emrNormal}</td><td>${row.emrRecovery}</td>
             <td class="${nc}">${row.normalError?'오류':'O'}</td>
@@ -717,7 +719,7 @@
             gR += data.totals.totalRecovery;
             gC += data.totals.totalComplex;
           }
-          renderComparison(`all-${pageKey}-summary`, data.comparison, isRFT);
+          renderComparison(`all-${pageKey}-summary`, data.comparisonAll || data.comparison, isRFT);
         } catch (e) {
           document.getElementById(`all-${pageKey}-summary`).innerHTML = `<p style="color:#e74c3c;">${e.message}</p>`;
         }
