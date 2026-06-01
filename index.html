@@ -344,7 +344,7 @@
       document.getElementById(`page-${page}`).classList.add('active');
       document.getElementById(`nav-${page}`).classList.add('active');
       const typeMap = { '4rft':'4F_RFT', '4fes':'4F_FES', '5rft':'5F_RFT', '5fes':'5F_FES' };
-      // 입력 탭: 처음 로드 시 서버에서 불러옴, 이후 탭 이동 시 유지
+      // 입력 탭: 항상 서버에서 불러옴
       if (typeMap[page]) {
         const containerId = `${page}-rooms`;
         const container = document.getElementById(containerId);
@@ -566,6 +566,8 @@
       const count = getRoomCount(type);
       const pageKey = getPageKey(type);
       const statusId = `${pageKey}-status`;
+      
+      // 현재 화면에서 입력된 데이터 수집
       const entries = [];
       for (let r = 1; r <= count; r++) {
         TIME_SLOTS.forEach(time => {
@@ -578,6 +580,23 @@
           }
         });
       }
+
+      // 서버에서 기존 데이터 가져와서 병합
+      try {
+        const existing = await apiCall('getRooms', { type });
+        if (existing.rooms && existing.rooms.length > 0) {
+          // 현재 입력된 룸+시간 조합 목록
+          const currentKeys = new Set(entries.map(e => `${e.room}-${e.time}`));
+          // 기존 데이터 중 현재 화면에 없는 것 유지
+          existing.rooms.forEach(old => {
+            const key = `${old.room}-${old.time}`;
+            if (!currentKeys.has(key) && old.name && old.name !== '') {
+              entries.push({ room: old.room, time: old.time, name: old.name, normal: Number(old.normal)||0, recovery: Number(old.recovery)||0, complex: Number(old.complex)||0 });
+            }
+          });
+        }
+      } catch(e) { /* 기존 데이터 못 가져오면 현재 데이터만 저장 */ }
+
       // 서버에 저장
       try {
         await apiCall('saveRoom', {}, { type, entries });
