@@ -146,7 +146,7 @@
       </div>
       <div class="card">
         <h2>4층 FES EMR 데이터</h2>
-        <p class="hint">형식: 이름[탭]회복기1[탭]회복기2[탭]일반1[탭]일반2 (EMR에서 그대로 붙여넣기)</p>
+        <p class="hint">형식: 이름[탭]회복기[탭]일반 (EMR에서 그대로 붙여넣기)</p>
         <textarea id="emr-4f_fes-input" placeholder="김지수&#9;&#9;3&#9;&#9;1&#9;0"></textarea>
         <div class="actions">
           <button class="btn btn-success" onclick="saveEMR('4F_FES')">EMR 저장</button>
@@ -185,7 +185,7 @@
       </div>
       <div class="card">
         <h2>5층 FES EMR 데이터</h2>
-        <p class="hint">형식: 이름[탭]회복기1[탭]회복기2[탭]일반1[탭]일반2 (EMR에서 그대로 붙여넣기)</p>
+        <p class="hint">형식: 이름[탭]회복기[탭]일반 (EMR에서 그대로 붙여넣기)</p>
         <textarea id="emr-5f_fes-input" placeholder="김지수&#9;&#9;3&#9;&#9;1&#9;0"></textarea>
         <div class="actions">
           <button class="btn btn-success" onclick="saveEMR('5F_FES')">EMR 저장</button>
@@ -553,6 +553,23 @@
     // ===== 데이터 로드/저장 =====
     async function loadRoomData(type) {
       renderRooms(type);
+      // 로컬 저장 데이터 먼저 표시
+      const localData = localStorage.getItem(`roomData_${type}`);
+      if (localData) {
+        const entries = JSON.parse(localData);
+        entries.forEach(entry => {
+          const nameEl = document.getElementById(`${type}-${entry.room}-${entry.time}-name`);
+          const normalEl = document.getElementById(`${type}-${entry.room}-${entry.time}-normal`);
+          const recoveryEl = document.getElementById(`${type}-${entry.room}-${entry.time}-recovery`);
+          const complexEl = document.getElementById(`${type}-${entry.room}-${entry.time}-complex`);
+          if (nameEl) nameEl.value = entry.name || '';
+          if (normalEl) normalEl.value = entry.normal || '';
+          if (recoveryEl) recoveryEl.value = entry.recovery || '';
+          if (complexEl) complexEl.value = entry.complex || '';
+        });
+        return;
+      }
+      // 로컬 없으면 서버에서 불러오기
       try {
         const data = await apiCall('getRooms', { type });
         if (data.rooms) {
@@ -586,6 +603,8 @@
           }
         });
       }
+      // 로컬에도 저장 (새로고침 시 유지)
+      localStorage.setItem(`roomData_${type}`, JSON.stringify(entries));
       try {
         await apiCall('saveRoom', {}, { type, entries });
         showStatus(statusId, '저장 완료!', 'success');
@@ -612,12 +631,10 @@
             const normal2 = Number(parts[5]) || 0;
             entries.push({ name: parts[0].trim(), normal: normal1 + normal2, recovery: recovery1 + recovery2, complex });
           } else {
-            // FES: 이름, 회복기1, 회복기2, 일반1, 일반2
-            const recovery1 = Number(parts[1]) || 0;
-            const recovery2 = Number(parts[2]) || 0;
-            const normal1 = Number(parts[3]) || 0;
-            const normal2 = Number(parts[4]) || 0;
-            entries.push({ name: parts[0].trim(), normal: normal1 + normal2, recovery: recovery1 + recovery2, complex: 0 });
+            // FES: 이름, 회복기, 일반
+            const recovery = Number(parts[1]) || 0;
+            const normal = Number(parts[2]) || 0;
+            entries.push({ name: parts[0].trim(), normal, recovery, complex: 0 });
           }
         }
       });
