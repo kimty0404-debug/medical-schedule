@@ -288,7 +288,7 @@
     .btn-warning:hover { background: #d68910; }
     .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .summary-table th { background: #2c3e50; color: white; }
-    .error-cell { background: #ffebee !important; color: #c62828; font-weight: bold; }
+    .error-cell { background: #ff0000 !important; color: white; font-weight: bold; font-size: 14px; }
     .ok-cell { background: #e8f5e9 !important; color: #2e7d32; }
     .totals-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 16px; }
     .total-item { background: #f8f9fa; padding: 10px; border-radius: 6px; text-align: center; }
@@ -659,15 +659,15 @@
           html += `<tr><td><strong>${row.name}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
             <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
-            <td class="${nc}">${row.normalError?'✗':'✓'}</td>
-            <td class="${cc}">${row.complexError?'✗':'✓'}</td>
-            <td class="${rc}">${row.recoveryError?'✗':'✓'}</td></tr>`;
+            <td class="${nc}">${row.normalError?'오류':'O'}</td>
+            <td class="${cc}">${row.complexError?'오류':'O'}</td>
+            <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
         } else {
           html += `<tr><td><strong>${row.name}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
             <td>${row.emrNormal}</td><td>${row.emrRecovery}</td>
-            <td class="${nc}">${row.normalError?'✗':'✓'}</td>
-            <td class="${rc}">${row.recoveryError?'✗':'✓'}</td></tr>`;
+            <td class="${nc}">${row.normalError?'오류':'O'}</td>
+            <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
         }
       });
       const grandTotal = totalRoomN + totalRoomR + (isRFT ? totalRoomC : 0);
