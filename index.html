@@ -559,12 +559,13 @@
     // ===== 데이터 로드/저장 =====
     async function loadRoomData(type) {
       renderRooms(type);
+      // 서버에서 저장된 데이터 불러오기
       await loadFromServer(type);
     }
 
     async function forceLoadRoomData(type) {
+      // 새로고침 버튼: 화면 초기화 (빈칸으로)
       renderRooms(type);
-      await loadFromServer(type);
     }
 
     async function loadFromServer(type) {
