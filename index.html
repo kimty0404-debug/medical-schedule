@@ -228,10 +228,6 @@
         </div>
         <div id="all-fes-comparison"></div>
       </div>
-      <div class="card">
-        <h2>전체 합산</h2>
-        <div id="all-grand-totals" class="totals-box"></div>
-      </div>
     </div>
     <!-- 설정 -->
     <div id="page-settings" class="page">
@@ -808,17 +804,6 @@
       }
       renderTotals('all-fes-totals', fesTotals, false);
       renderAllTable('all-fes-summary', fesMap, false);
-
-      // 전체 합산
-      const gN = rftTotals.totalNormal + fesTotals.totalNormal;
-      const gR = rftTotals.totalRecovery + fesTotals.totalRecovery;
-      const gC = rftTotals.totalComplex;
-      document.getElementById('all-grand-totals').innerHTML = `
-        <div class="total-item"><div class="label">전체 일반</div><div class="value" style="color:#2980b9;font-size:26px;">${gN}</div></div>
-        <div class="total-item"><div class="label">전체 회복기</div><div class="value" style="color:#27ae60;font-size:26px;">${gR}</div></div>
-        <div class="total-item"><div class="label">전체 C</div><div class="value" style="color:#8e44ad;font-size:26px;">${gC}</div></div>
-        <div class="total-item"><div class="label">전체 총합</div><div class="value" style="color:#2c3e50;font-size:26px;">${gN+gR+gC}</div></div>
-      `;
 
       // 데이터 저장 (비교용)
       window._rftMap = rftMap;
