@@ -228,41 +228,56 @@
     </div>
     <!-- 설정 -->
     <div id="page-settings" class="page">
-      <div class="card">
-        <h2>시스템 설정</h2>
-        <div class="config-banner">
-          <strong>Google Apps Script URL 설정:</strong><br>
-          배포된 Google Apps Script 웹앱 URL을 입력하세요.
-        </div>
-        <div class="settings-form" style="margin-bottom:16px;">
-          <label>Apps Script URL:</label>
-          <input type="text" id="script-url" style="width:400px;" placeholder="https://script.google.com/macros/s/...../exec">
-          <button class="btn btn-primary" onclick="saveScriptUrl()">URL 저장</button>
-        </div>
+      <div id="settings-lock" class="card">
+        <h2>관리자 인증</h2>
         <div class="settings-form">
-          <label>4층 RFT 룸 수:</label>
-          <input type="number" id="setting-4rft-rooms" min="1" max="10" value="6">
-          <label>4층 FES 룸 수:</label>
-          <input type="number" id="setting-4fes-rooms" min="1" max="10" value="3">
+          <input type="password" id="admin-password" placeholder="비밀번호 입력" style="width:200px;padding:8px;" onkeydown="if(event.key==='Enter')unlockSettings()">
+          <button class="btn btn-primary" onclick="unlockSettings()">확인</button>
         </div>
-        <div class="settings-form" style="margin-top:8px;">
-          <label>5층 RFT 룸 수:</label>
-          <input type="number" id="setting-5rft-rooms" min="1" max="10" value="6">
-          <label>5층 FES 룸 수:</label>
-          <input type="number" id="setting-5fes-rooms" min="1" max="10" value="3">
-          <button class="btn btn-success" onclick="saveAppSettings()">설정 저장</button>
-        </div>
-        <div id="settings-status" class="status"></div>
+        <div id="lock-status" class="status"></div>
       </div>
-      <div class="card">
-        <h2>검사자 이름 리스트 관리</h2>
-        <p class="hint">여기에 등록된 이름이 룸 입력 시 자동완성으로 표시됩니다.</p>
-        <div class="settings-form" style="margin-bottom:12px;">
-          <input type="text" id="new-name-input" placeholder="새 이름 입력" style="width:150px;padding:6px;" onkeydown="if(event.key==='Enter')addName()">
-          <button class="btn btn-success" onclick="addName()">추가</button>
+      <div id="settings-content" style="display:none;">
+        <div class="card">
+          <h2>시스템 설정</h2>
+          <div class="config-banner">
+            <strong>Google Apps Script URL 설정:</strong><br>
+            배포된 Google Apps Script 웹앱 URL을 입력하세요.
+          </div>
+          <div class="settings-form" style="margin-bottom:16px;">
+            <label>Apps Script URL:</label>
+            <input type="text" id="script-url" style="width:400px;" placeholder="https://script.google.com/macros/s/...../exec">
+            <button class="btn btn-primary" onclick="saveScriptUrl()">URL 저장</button>
+          </div>
+          <div class="settings-form">
+            <label>4층 RFT 룸 수:</label>
+            <input type="number" id="setting-4rft-rooms" min="1" max="10" value="6">
+            <label>4층 FES 룸 수:</label>
+            <input type="number" id="setting-4fes-rooms" min="1" max="10" value="3">
+          </div>
+          <div class="settings-form" style="margin-top:8px;">
+            <label>5층 RFT 룸 수:</label>
+            <input type="number" id="setting-5rft-rooms" min="1" max="10" value="6">
+            <label>5층 FES 룸 수:</label>
+            <input type="number" id="setting-5fes-rooms" min="1" max="10" value="3">
+            <button class="btn btn-success" onclick="saveAppSettings()">설정 저장</button>
+          </div>
+          <div class="settings-form" style="margin-top:12px;">
+            <label>관리자 비밀번호 변경:</label>
+            <input type="password" id="new-admin-password" placeholder="새 비밀번호" style="width:150px;padding:6px;">
+            <button class="btn btn-warning" onclick="changePassword()">변경</button>
+          </div>
+          <div id="settings-status" class="status"></div>
         </div>
-        <div id="name-list" class="name-list"></div>
-        <div id="name-list-status" class="status"></div>
+        <div class="card">
+          <h2>검사자 이름 리스트 관리</h2>
+          <p class="hint">여기에 등록된 이름이 룸 입력 시 자동완성으로 표시됩니다.</p>
+          <div class="settings-form" style="margin-bottom:12px;">
+            <input type="text" id="new-name-input" placeholder="새 이름 입력" style="width:150px;padding:6px;" onkeydown="if(event.key==='Enter')addName()">
+            <button class="btn btn-success" onclick="addName()">추가</button>
+          </div>
+          <div id="name-list" class="name-list"></div>
+          <div id="name-list-status" class="status"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -358,7 +373,11 @@
       if (page === 'admin4') { loadSummary('4F_RFT'); loadSummary('4F_FES'); }
       if (page === 'admin5') { loadSummary('5F_RFT'); loadSummary('5F_FES'); }
       if (page === 'all') loadAllSummary();
-      if (page === 'settings') loadSettings();
+      if (page === 'settings') {
+        document.getElementById('settings-lock').style.display = 'block';
+        document.getElementById('settings-content').style.display = 'none';
+        document.getElementById('admin-password').value = '';
+      }
     }
 
     function showStatus(id, msg, type) {
@@ -650,7 +669,7 @@
         </tr></thead><tbody>`;
       } else {
         html = `<table class="summary-table"><thead><tr>
-          <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>합계</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>회복기</th>
+          <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>회복기</th>
         </tr></thead><tbody>`;
       }
       let totalRoomN=0, totalRoomR=0, totalRoomC=0, totalEmrN=0, totalEmrR=0, totalEmrC=0;
@@ -673,7 +692,7 @@
             <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
         } else {
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
-            <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
+            <td>${row.roomNormal}</td><td>${row.roomRecovery}</td>
             <td>${row.emrNormal}</td><td>${row.emrRecovery}</td>
             <td class="${nc}">${row.normalError?'오류':'O'}</td>
             <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
@@ -686,7 +705,7 @@
           <td>${totalEmrN}</td><td>${totalEmrC}</td><td>${totalEmrR}</td><td></td><td></td><td></td></tr>`;
       } else {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
-          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td><td>${grandTotal}</td>
+          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td>
           <td>${totalEmrN}</td><td>${totalEmrR}</td><td></td><td></td></tr>`;
       }
       html += '</tbody></table>';
@@ -733,6 +752,28 @@
     }
 
     // ===== 설정 =====
+    const DEFAULT_PASSWORD = '1234'; // 초기 비밀번호 (설정에서 변경 가능)
+
+    function unlockSettings() {
+      const input = document.getElementById('admin-password').value;
+      const savedPw = localStorage.getItem('adminPassword') || DEFAULT_PASSWORD;
+      if (input === savedPw) {
+        document.getElementById('settings-lock').style.display = 'none';
+        document.getElementById('settings-content').style.display = 'block';
+        loadSettings();
+      } else {
+        showStatus('lock-status', '비밀번호가 틀렸습니다.', 'error');
+      }
+    }
+
+    function changePassword() {
+      const newPw = document.getElementById('new-admin-password').value.trim();
+      if (!newPw) { showStatus('settings-status', '비밀번호를 입력하세요.', 'error'); return; }
+      localStorage.setItem('adminPassword', newPw);
+      document.getElementById('new-admin-password').value = '';
+      showStatus('settings-status', '비밀번호 변경 완료', 'success');
+    }
+
     function loadSettings() {
       document.getElementById('script-url').value = getScriptUrl();
       document.getElementById('setting-4rft-rooms').value = APP_SETTINGS['4rft'];
@@ -749,7 +790,7 @@
       APP_SETTINGS['5fes'] = Number(document.getElementById('setting-5fes-rooms').value) || 3;
       localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
       try {
-        await apiCall('saveSettings', {}, APP_SETTINGS);
+        await apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') });
         showStatus('settings-status', '설정 저장 완료', 'success');
       } catch (e) { showStatus('settings-status', '로컬 저장됨', 'info'); }
     }
@@ -759,10 +800,29 @@
       const saved = localStorage.getItem('nameList');
       if (saved) NAME_LIST = JSON.parse(saved);
       renderNameList();
+      // 서버에서도 불러오기 시도
+      loadNameListFromServer();
+    }
+    async function loadNameListFromServer() {
+      try {
+        const settings = await apiCall('getSettings');
+        if (settings.nameList && settings.nameList !== '') {
+          NAME_LIST = settings.nameList.split(',');
+          localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
+          renderNameList();
+        }
+        if (settings['4rft']) APP_SETTINGS['4rft'] = Number(settings['4rft']);
+        if (settings['4fes']) APP_SETTINGS['4fes'] = Number(settings['4fes']);
+        if (settings['5rft']) APP_SETTINGS['5rft'] = Number(settings['5rft']);
+        if (settings['5fes']) APP_SETTINGS['5fes'] = Number(settings['5fes']);
+        localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
+      } catch(e) { console.log('서버 설정 로드 실패:', e.message); }
     }
     function saveNameList() {
       localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
       renderNameList();
+      // 서버에도 저장
+      try { apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') }); } catch(e) {}
     }
     function renderNameList() {
       const container = document.getElementById('name-list');
