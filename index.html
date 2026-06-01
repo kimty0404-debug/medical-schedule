@@ -198,12 +198,39 @@
     <!-- 전체 보기 -->
     <div id="page-all" class="page">
       <div class="card">
-        <h2>4층 + 5층 전체 통합 집계</h2>
+        <h2>RFT 전체 (4층+5층 합산)</h2>
         <div class="actions" style="margin-bottom:16px;">
           <button class="btn btn-primary" onclick="loadAllSummary()">전체 집계 새로고침</button>
         </div>
+        <div id="all-rft-totals" class="totals-box"></div>
+        <div id="all-rft-summary"></div>
+      </div>
+      <div class="card">
+        <h2>RFT 전체 EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]회복기1[탭]회복기2[탭]C[탭]일반1[탭]일반2 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-all-rft-input" placeholder="김광현&#9;&#9;1&#9;&#9;3&#9;7"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="compareAllEMR('RFT')">비교하기</button>
+        </div>
+        <div id="all-rft-comparison"></div>
+      </div>
+      <div class="card">
+        <h2>FES 전체 (4층+5층 합산)</h2>
+        <div id="all-fes-totals" class="totals-box"></div>
+        <div id="all-fes-summary"></div>
+      </div>
+      <div class="card">
+        <h2>FES 전체 EMR 데이터</h2>
+        <p class="hint">형식: 이름[탭]회복기[탭]일반 (EMR에서 그대로 붙여넣기)</p>
+        <textarea id="emr-all-fes-input" placeholder="김지수&#9;1&#9;3"></textarea>
+        <div class="actions">
+          <button class="btn btn-success" onclick="compareAllEMR('FES')">비교하기</button>
+        </div>
+        <div id="all-fes-comparison"></div>
+      </div>
+      <div class="card">
+        <h2>전체 합산</h2>
         <div id="all-grand-totals" class="totals-box"></div>
-        <div id="all-merged-summary"></div>
       </div>
     </div>
     <!-- 설정 -->
@@ -739,35 +766,53 @@
     }
 
     async function loadAllSummary() {
-      const types = ['4F_RFT','4F_FES','5F_RFT','5F_FES'];
-      let gN=0, gR=0, gC=0;
-      const mergedMap = {}; // 이름별 합산
-
-      for (const type of types) {
+      // RFT 합산 (4층+5층)
+      const rftMap = {};
+      let rftTotals = { amNormal:0, amRecovery:0, amComplex:0, pmNormal:0, pmRecovery:0, pmComplex:0, totalNormal:0, totalRecovery:0, totalComplex:0 };
+      for (const type of ['4F_RFT','5F_RFT']) {
         try {
           const data = await apiCall('getSummary', { type });
           if (data.totals) {
-            gN += data.totals.totalNormal;
-            gR += data.totals.totalRecovery;
-            gC += data.totals.totalComplex;
+            rftTotals.amNormal += data.totals.amNormal; rftTotals.amRecovery += data.totals.amRecovery; rftTotals.amComplex += data.totals.amComplex;
+            rftTotals.pmNormal += data.totals.pmNormal; rftTotals.pmRecovery += data.totals.pmRecovery; rftTotals.pmComplex += data.totals.pmComplex;
+            rftTotals.totalNormal += data.totals.totalNormal; rftTotals.totalRecovery += data.totals.totalRecovery; rftTotals.totalComplex += data.totals.totalComplex;
           }
-          // 전체 비교 데이터 합산
-          const compData = data.comparisonAll || data.comparison || [];
-          compData.forEach(row => {
-            if (!mergedMap[row.name]) {
-              mergedMap[row.name] = { roomNormal:0, roomRecovery:0, roomComplex:0, emrNormal:0, emrRecovery:0, emrComplex:0 };
-            }
-            mergedMap[row.name].roomNormal += row.roomNormal || 0;
-            mergedMap[row.name].roomRecovery += row.roomRecovery || 0;
-            mergedMap[row.name].roomComplex += row.roomComplex || 0;
-            mergedMap[row.name].emrNormal += row.emrNormal || 0;
-            mergedMap[row.name].emrRecovery += row.emrRecovery || 0;
-            mergedMap[row.name].emrComplex += row.emrComplex || 0;
+          (data.comparison||[]).forEach(row => {
+            if (!rftMap[row.name]) rftMap[row.name] = { normal:0, recovery:0, complex:0 };
+            rftMap[row.name].normal += row.roomNormal||0;
+            rftMap[row.name].recovery += row.roomRecovery||0;
+            rftMap[row.name].complex += row.roomComplex||0;
           });
-        } catch (e) { console.log(e.message); }
+        } catch(e) {}
       }
+      renderTotals('all-rft-totals', rftTotals, true);
+      renderAllTable('all-rft-summary', rftMap, true);
 
-      // 총합 표시
+      // FES 합산 (4층+5층)
+      const fesMap = {};
+      let fesTotals = { amNormal:0, amRecovery:0, amComplex:0, pmNormal:0, pmRecovery:0, pmComplex:0, totalNormal:0, totalRecovery:0, totalComplex:0 };
+      for (const type of ['4F_FES','5F_FES']) {
+        try {
+          const data = await apiCall('getSummary', { type });
+          if (data.totals) {
+            fesTotals.amNormal += data.totals.amNormal; fesTotals.amRecovery += data.totals.amRecovery;
+            fesTotals.pmNormal += data.totals.pmNormal; fesTotals.pmRecovery += data.totals.pmRecovery;
+            fesTotals.totalNormal += data.totals.totalNormal; fesTotals.totalRecovery += data.totals.totalRecovery;
+          }
+          (data.comparison||[]).forEach(row => {
+            if (!fesMap[row.name]) fesMap[row.name] = { normal:0, recovery:0 };
+            fesMap[row.name].normal += row.roomNormal||0;
+            fesMap[row.name].recovery += row.roomRecovery||0;
+          });
+        } catch(e) {}
+      }
+      renderTotals('all-fes-totals', fesTotals, false);
+      renderAllTable('all-fes-summary', fesMap, false);
+
+      // 전체 합산
+      const gN = rftTotals.totalNormal + fesTotals.totalNormal;
+      const gR = rftTotals.totalRecovery + fesTotals.totalRecovery;
+      const gC = rftTotals.totalComplex;
       document.getElementById('all-grand-totals').innerHTML = `
         <div class="total-item"><div class="label">전체 일반</div><div class="value" style="color:#2980b9;font-size:26px;">${gN}</div></div>
         <div class="total-item"><div class="label">전체 회복기</div><div class="value" style="color:#27ae60;font-size:26px;">${gR}</div></div>
@@ -775,42 +820,81 @@
         <div class="total-item"><div class="label">전체 총합</div><div class="value" style="color:#2c3e50;font-size:26px;">${gN+gR+gC}</div></div>
       `;
 
-      // 합산 테이블 (가나다순)
-      const merged = Object.entries(mergedMap).map(([name, d]) => ({
-        name, ...d,
-        normalError: d.roomNormal !== d.emrNormal,
-        recoveryError: d.roomRecovery !== d.emrRecovery,
-        complexError: d.roomComplex !== d.emrComplex
-      }));
-      merged.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      // 데이터 저장 (비교용)
+      window._rftMap = rftMap;
+      window._fesMap = fesMap;
+    }
 
-      let html = `<table class="summary-table"><thead><tr>
-        <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
-      </tr></thead><tbody>`;
-      let tRN=0,tRC=0,tRR=0,tEN=0,tEC=0,tER=0;
-      merged.forEach(row => {
-        if (row.roomNormal===0 && row.roomRecovery===0 && row.roomComplex===0 && row.emrNormal===0 && row.emrRecovery===0 && row.emrComplex===0) return;
-        const nc = row.normalError ? 'error-cell' : 'ok-cell';
-        const rc = row.recoveryError ? 'error-cell' : 'ok-cell';
-        const cc = row.complexError ? 'error-cell' : 'ok-cell';
-        const nDiff = row.roomNormal - row.emrNormal;
-        const cDiff = row.roomComplex - row.emrComplex;
-        const rDiff = row.roomRecovery - row.emrRecovery;
-        const fmtDiff = (d) => d === 0 ? 'O' : (d > 0 ? `+${d}` : `${d}`);
-        tRN+=row.roomNormal; tRC+=row.roomComplex; tRR+=row.roomRecovery;
-        tEN+=row.emrNormal; tEC+=row.emrComplex; tER+=row.emrRecovery;
-        html += `<tr><td><strong>${row.name}</strong></td>
-          <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td>
-          <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
-          <td class="${nc}">${fmtDiff(nDiff)}</td>
-          <td class="${cc}">${fmtDiff(cDiff)}</td>
-          <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
-      });
-      html += `<tr style="background:#f0f0f0;font-weight:bold;">
-        <td>합계</td><td>${tRN}</td><td>${tRC}</td><td>${tRR}</td>
-        <td>${tEN}</td><td>${tEC}</td><td>${tER}</td><td></td><td></td><td></td></tr>`;
+    function renderAllTable(containerId, dataMap, isRFT) {
+      const sorted = Object.entries(dataMap).sort((a,b) => a[0].localeCompare(b[0],'ko'));
+      if (sorted.length === 0) { document.getElementById(containerId).innerHTML = '<p style="color:#7f8c8d;">데이터 없음</p>'; return; }
+      let html;
+      if (isRFT) {
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>C</th><th>회복기</th></tr></thead><tbody>`;
+        sorted.forEach(([name, d]) => { html += `<tr><td><strong>${name}</strong></td><td>${d.normal}</td><td>${d.complex}</td><td>${d.recovery}</td></tr>`; });
+      } else {
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
+        sorted.forEach(([name, d]) => { html += `<tr><td><strong>${name}</strong></td><td>${d.normal}</td><td>${d.recovery}</td></tr>`; });
+      }
       html += '</tbody></table>';
-      document.getElementById('all-merged-summary').innerHTML = html;
+      document.getElementById(containerId).innerHTML = html;
+    }
+
+    function compareAllEMR(examType) {
+      const isRFT = examType === 'RFT';
+      const textareaId = `emr-all-${examType.toLowerCase()}-input`;
+      const resultId = `all-${examType.toLowerCase()}-comparison`;
+      const text = document.getElementById(textareaId).value.trim();
+      if (!text) return;
+
+      const emrMap = {};
+      text.split('\n').forEach(line => {
+        const parts = line.split('\t');
+        if (parts[0]?.trim()) {
+          if (isRFT) {
+            const recovery1 = Number(parts[1])||0, recovery2 = Number(parts[2])||0;
+            const complex = Number(parts[3])||0;
+            const normal1 = Number(parts[4])||0, normal2 = Number(parts[5])||0;
+            emrMap[parts[0].trim()] = { normal: normal1+normal2, recovery: recovery1+recovery2, complex };
+          } else {
+            const recovery = Number(parts[1])||0, normal = Number(parts[2])||0;
+            emrMap[parts[0].trim()] = { normal, recovery };
+          }
+        }
+      });
+
+      const dataMap = isRFT ? (window._rftMap||{}) : (window._fesMap||{});
+      const allNames = new Set([...Object.keys(dataMap), ...Object.keys(emrMap)]);
+      const rows = [];
+      allNames.forEach(name => {
+        const room = dataMap[name] || { normal:0, recovery:0, complex:0 };
+        const emr = emrMap[name] || { normal:0, recovery:0, complex:0 };
+        rows.push({ name, room, emr });
+      });
+      rows.sort((a,b) => a.name.localeCompare(b.name,'ko'));
+
+      let html;
+      if (isRFT) {
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th></tr></thead><tbody>`;
+        rows.forEach(r => {
+          if (r.room.normal===0&&r.room.recovery===0&&r.room.complex===0&&r.emr.normal===0&&r.emr.recovery===0&&r.emr.complex===0) return;
+          const nD=r.room.normal-r.emr.normal, cD=r.room.complex-r.emr.complex, rD=r.room.recovery-r.emr.recovery;
+          const f=(d)=>d===0?'O':(d>0?`+${d}`:`${d}`);
+          const nc=nD!==0?'error-cell':'ok-cell', cc=cD!==0?'error-cell':'ok-cell', rc=rD!==0?'error-cell':'ok-cell';
+          html += `<tr><td><strong>${r.name}</strong></td><td>${r.room.normal}</td><td>${r.room.complex}</td><td>${r.room.recovery}</td><td>${r.emr.normal}</td><td>${r.emr.complex}</td><td>${r.emr.recovery}</td><td class="${nc}">${f(nD)}</td><td class="${cc}">${f(cD)}</td><td class="${rc}">${f(rD)}</td></tr>`;
+        });
+      } else {
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
+        rows.forEach(r => {
+          if (r.room.normal===0&&r.room.recovery===0&&r.emr.normal===0&&r.emr.recovery===0) return;
+          const nD=r.room.normal-r.emr.normal, rD=r.room.recovery-r.emr.recovery;
+          const f=(d)=>d===0?'O':(d>0?`+${d}`:`${d}`);
+          const nc=nD!==0?'error-cell':'ok-cell', rc=rD!==0?'error-cell':'ok-cell';
+          html += `<tr><td><strong>${r.name}</strong></td><td>${r.room.normal}</td><td>${r.room.recovery}</td><td>${r.emr.normal}</td><td>${r.emr.recovery}</td><td class="${nc}">${f(nD)}</td><td class="${rc}">${f(rD)}</td></tr>`;
+        });
+      }
+      html += '</tbody></table>';
+      document.getElementById(resultId).innerHTML = html;
     }
 
     // ===== 설정 =====
