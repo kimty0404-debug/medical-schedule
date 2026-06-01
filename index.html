@@ -77,7 +77,7 @@
         <div id="4rft-rooms" class="rooms-grid"></div>
         <div class="actions">
           <button class="btn btn-primary" onclick="saveRoomData('4F_RFT')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('4F_RFT')">새로고침</button>
+          <button class="btn btn-warning" onclick="forceLoadRoomData('4F_RFT')">새로고침</button>
         </div>
         <div id="4rft-status" class="status"></div>
       </div>
@@ -88,7 +88,7 @@
         <div id="4fes-rooms" class="rooms-grid"></div>
         <div class="actions">
           <button class="btn btn-primary" onclick="saveRoomData('4F_FES')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('4F_FES')">새로고침</button>
+          <button class="btn btn-warning" onclick="forceLoadRoomData('4F_FES')">새로고침</button>
         </div>
         <div id="4fes-status" class="status"></div>
       </div>
@@ -99,7 +99,7 @@
         <div id="5rft-rooms" class="rooms-grid"></div>
         <div class="actions">
           <button class="btn btn-primary" onclick="saveRoomData('5F_RFT')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('5F_RFT')">새로고침</button>
+          <button class="btn btn-warning" onclick="forceLoadRoomData('5F_RFT')">새로고침</button>
         </div>
         <div id="5rft-status" class="status"></div>
       </div>
@@ -110,7 +110,7 @@
         <div id="5fes-rooms" class="rooms-grid"></div>
         <div class="actions">
           <button class="btn btn-primary" onclick="saveRoomData('5F_FES')">저장</button>
-          <button class="btn btn-warning" onclick="loadRoomData('5F_FES')">새로고침</button>
+          <button class="btn btn-warning" onclick="forceLoadRoomData('5F_FES')">새로고침</button>
         </div>
         <div id="5fes-status" class="status"></div>
       </div>
@@ -337,7 +337,9 @@
     let APP_SETTINGS = { '4rft': 6, '4fes': 3, '5rft': 6, '5fes': 3 };
     let NAME_LIST = [];
 
-    function getScriptUrl() { return localStorage.getItem('scriptUrl') || ''; }
+    function getScriptUrl() {
+      return 'https://script.google.com/macros/s/AKfycbzbe34bYM6sLZCEA9keQ4UemDa24N9yrsGc8k1w0N4Qp73sV_D-qI7eQXYoVlWBDSfk/exec';
+    }
     function saveScriptUrl() {
       localStorage.setItem('scriptUrl', document.getElementById('script-url').value.trim());
       showStatus('settings-status', 'URL 저장됨', 'success');
@@ -570,6 +572,16 @@
         return;
       }
       // 로컬 없으면 서버에서 불러오기
+      await loadFromServer(type);
+    }
+
+    async function forceLoadRoomData(type) {
+      localStorage.removeItem(`roomData_${type}`);
+      renderRooms(type);
+      await loadFromServer(type);
+    }
+
+    async function loadFromServer(type) {
       try {
         const data = await apiCall('getRooms', { type });
         if (data.rooms) {
@@ -583,6 +595,8 @@
             if (recoveryEl) recoveryEl.value = entry.recovery || '';
             if (complexEl) complexEl.value = entry.complex || '';
           });
+          // 서버 데이터를 로컬에도 저장
+          localStorage.setItem(`roomData_${type}`, JSON.stringify(data.rooms));
         }
       } catch (e) { console.log('로드 실패:', e.message); }
     }
