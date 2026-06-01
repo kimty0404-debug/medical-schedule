@@ -318,7 +318,7 @@
     let NAME_LIST = [];
 
     function getScriptUrl() {
-      return 'https://script.google.com/macros/s/AKfycbzbe34bYM6sLZCEA9keQ4UemDa24N9yrsGc8k1w0N4Qp73sV_D-qI7eQXYoVlWBDSfk/exec';
+      return 'https://script.google.com/macros/s/AKfycbzHwhzTu_Zbbkr6tKJi_xbVa2F4H19bTCa9C3qhwiNQjFZ4vT1r7q8__QsnKQiTHQe7/exec';
     }
     function saveScriptUrl() {
       localStorage.setItem('scriptUrl', document.getElementById('script-url').value.trim());
@@ -656,7 +656,7 @@
       let html;
       if (isRFT) {
         html = `<table class="summary-table"><thead><tr>
-          <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>합계</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
+          <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
         </tr></thead><tbody>`;
       } else {
         html = `<table class="summary-table"><thead><tr>
@@ -680,7 +680,7 @@
         const nameLabel = row.missingInRoom ? `${row.name} ⚠️` : row.name;
         if (isRFT) {
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
-            <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
+            <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td>
             <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
             <td class="${nc}">${fmtDiff(nDiff)}</td>
             <td class="${cc}">${fmtDiff(cDiff)}</td>
@@ -696,7 +696,7 @@
       const grandTotal = totalRoomN + totalRoomR + (isRFT ? totalRoomC : 0);
       if (isRFT) {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
-          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomC}</td><td>${totalRoomR}</td><td>${grandTotal}</td>
+          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomC}</td><td>${totalRoomR}</td>
           <td>${totalEmrN}</td><td>${totalEmrC}</td><td>${totalEmrR}</td><td></td><td></td><td></td></tr>`;
       } else {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
@@ -766,7 +766,7 @@
       merged.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
       let html = `<table class="summary-table"><thead><tr>
-        <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>합계</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
+        <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
       </tr></thead><tbody>`;
       let tRN=0,tRC=0,tRR=0,tEN=0,tEC=0,tER=0;
       merged.forEach(row => {
@@ -778,18 +778,17 @@
         const cDiff = row.roomComplex - row.emrComplex;
         const rDiff = row.roomRecovery - row.emrRecovery;
         const fmtDiff = (d) => d === 0 ? 'O' : (d > 0 ? `+${d}` : `${d}`);
-        const total = row.roomNormal + row.roomComplex + row.roomRecovery;
         tRN+=row.roomNormal; tRC+=row.roomComplex; tRR+=row.roomRecovery;
         tEN+=row.emrNormal; tEC+=row.emrComplex; tER+=row.emrRecovery;
         html += `<tr><td><strong>${row.name}</strong></td>
-          <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${total}</strong></td>
+          <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td>
           <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
           <td class="${nc}">${fmtDiff(nDiff)}</td>
           <td class="${cc}">${fmtDiff(cDiff)}</td>
           <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
       });
       html += `<tr style="background:#f0f0f0;font-weight:bold;">
-        <td>합계</td><td>${tRN}</td><td>${tRC}</td><td>${tRR}</td><td>${tRN+tRC+tRR}</td>
+        <td>합계</td><td>${tRN}</td><td>${tRC}</td><td>${tRR}</td>
         <td>${tEN}</td><td>${tEC}</td><td>${tER}</td><td></td><td></td><td></td></tr>`;
       html += '</tbody></table>';
       document.getElementById('all-merged-summary').innerHTML = html;
