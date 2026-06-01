@@ -841,26 +841,11 @@
 
     // ===== 이름 리스트 =====
     function loadNameList() {
-      const saved = localStorage.getItem('nameList');
-      if (saved) NAME_LIST = JSON.parse(saved);
       renderNameList();
-      // 서버에서도 불러오기
-      loadNameListFromServer();
     }
     async function loadNameListFromServer() {
-      try {
-        const settings = await apiCall('getSettings');
-        if (settings.nameList && String(settings.nameList).trim() !== '') {
-          NAME_LIST = String(settings.nameList).split(',').filter(n => n.trim() !== '');
-          localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
-          renderNameList();
-        }
-        if (settings['4rft']) APP_SETTINGS['4rft'] = Number(settings['4rft']);
-        if (settings['4fes']) APP_SETTINGS['4fes'] = Number(settings['4fes']);
-        if (settings['5rft']) APP_SETTINGS['5rft'] = Number(settings['5rft']);
-        if (settings['5fes']) APP_SETTINGS['5fes'] = Number(settings['5fes']);
-        localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
-      } catch(e) { console.log('서버 설정 로드 실패:', e.message); }
+      // init에서 이미 처리하므로 여기서는 renderNameList만
+      renderNameList();
     }
     async function saveNameList() {
       localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
@@ -942,10 +927,26 @@
     }
 
     // ===== 초기화 =====
-    function init() {
+    async function init() {
       const saved = localStorage.getItem('appSettings');
       if (saved) APP_SETTINGS = JSON.parse(saved);
-      loadNameList();
+      // localStorage에서 이름 먼저 로드
+      const savedNames = localStorage.getItem('nameList');
+      if (savedNames) NAME_LIST = JSON.parse(savedNames);
+      // 서버에서 설정 + 이름 불러오기 (완료될 때까지 대기)
+      try {
+        const settings = await apiCall('getSettings');
+        if (settings.nameList && String(settings.nameList).trim() !== '') {
+          NAME_LIST = String(settings.nameList).split(',').filter(n => n.trim() !== '');
+          localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
+        }
+        if (settings['4rft']) APP_SETTINGS['4rft'] = Number(settings['4rft']);
+        if (settings['4fes']) APP_SETTINGS['4fes'] = Number(settings['4fes']);
+        if (settings['5rft']) APP_SETTINGS['5rft'] = Number(settings['5rft']);
+        if (settings['5fes']) APP_SETTINGS['5fes'] = Number(settings['5fes']);
+        localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
+      } catch(e) { console.log('서버 설정 로드 실패:', e.message); }
+      // 설정 로드 완료 후 페이지 표시
       showPage('4rft');
     }
     init();
