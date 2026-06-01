@@ -844,14 +844,14 @@
       const saved = localStorage.getItem('nameList');
       if (saved) NAME_LIST = JSON.parse(saved);
       renderNameList();
-      // 서버에서도 불러오기 시도
+      // 서버에서도 불러오기
       loadNameListFromServer();
     }
     async function loadNameListFromServer() {
       try {
         const settings = await apiCall('getSettings');
-        if (settings.nameList && settings.nameList !== '') {
-          NAME_LIST = settings.nameList.split(',');
+        if (settings.nameList && String(settings.nameList).trim() !== '') {
+          NAME_LIST = String(settings.nameList).split(',').filter(n => n.trim() !== '');
           localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
           renderNameList();
         }
@@ -862,11 +862,13 @@
         localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
       } catch(e) { console.log('서버 설정 로드 실패:', e.message); }
     }
-    function saveNameList() {
+    async function saveNameList() {
       localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
       renderNameList();
       // 서버에도 저장
-      try { apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') }); } catch(e) {}
+      try {
+        await apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') });
+      } catch(e) { console.log('서버 저장 실패:', e.message); }
     }
     function renderNameList() {
       const container = document.getElementById('name-list');
@@ -875,21 +877,21 @@
         `<span class="name-tag">${name}<button class="remove-btn" onclick="removeName(${i})">✕</button></span>`
       ).join('');
     }
-    function addName() {
+    async function addName() {
       const input = document.getElementById('new-name-input');
       const name = input.value.trim();
       if (!name) return;
       if (NAME_LIST.includes(name)) { showStatus('name-list-status', '이미 등록됨', 'error'); return; }
       NAME_LIST.push(name);
       NAME_LIST.sort((a,b) => a.localeCompare(b,'ko'));
-      saveNameList();
+      await saveNameList();
       input.value = '';
       showStatus('name-list-status', `"${name}" 추가됨`, 'success');
     }
-    function removeName(index) {
+    async function removeName(index) {
       const name = NAME_LIST[index];
       NAME_LIST.splice(index, 1);
-      saveNameList();
+      await saveNameList();
       showStatus('name-list-status', `"${name}" 삭제됨`, 'info');
     }
 
