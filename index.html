@@ -228,6 +228,21 @@
         </div>
         <div id="all-fes-comparison"></div>
       </div>
+      <div class="card">
+        <h2>날짜별 집계 저장/열람</h2>
+        <div class="actions" style="margin-bottom:12px;">
+          <button class="btn btn-success" onclick="saveTodaySummary()">오늘 집계 저장</button>
+          <div id="save-daily-status" class="status"></div>
+        </div>
+        <div class="settings-form" style="margin-bottom:12px;">
+          <label>날짜 선택:</label>
+          <select id="daily-date-select" style="padding:6px;font-size:14px;" onchange="loadDailySummary()">
+            <option value="">-- 날짜 선택 --</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadDailyDates()">목록 새로고침</button>
+        </div>
+        <div id="daily-summary-view"></div>
+      </div>
     </div>
     <!-- 설정 -->
     <div id="page-settings" class="page">
@@ -808,6 +823,66 @@
       // 데이터 저장 (비교용)
       window._rftMap = rftMap;
       window._fesMap = fesMap;
+      // 날짜 목록 로드
+      loadDailyDates();
+    }
+
+    async function saveTodaySummary() {
+      const today = new Date().toISOString().split('T')[0]; // 2026-06-01
+      const entries = [];
+      // RFT 데이터
+      if (window._rftMap) {
+        Object.entries(window._rftMap).forEach(([name, d]) => {
+          entries.push({ type: 'RFT', name, normal: d.normal, recovery: d.recovery, complex: d.complex });
+        });
+      }
+      // FES 데이터
+      if (window._fesMap) {
+        Object.entries(window._fesMap).forEach(([name, d]) => {
+          entries.push({ type: 'FES', name, normal: d.normal, recovery: d.recovery, complex: 0 });
+        });
+      }
+      try {
+        await apiCall('saveDailyRecord', {}, { date: today, records: entries });
+        showStatus('save-daily-status', `${today} 집계 저장 완료!`, 'success');
+        loadDailyDates();
+      } catch(e) { showStatus('save-daily-status', '저장 실패: ' + e.message, 'error'); }
+    }
+
+    async function loadDailyDates() {
+      try {
+        const result = await apiCall('getDailyDates');
+        const select = document.getElementById('daily-date-select');
+        select.innerHTML = '<option value="">-- 날짜 선택 --</option>';
+        if (result.dates) {
+          result.dates.forEach(date => {
+            select.innerHTML += `<option value="${date}">${date}</option>`;
+          });
+        }
+      } catch(e) {}
+    }
+
+    async function loadDailySummary() {
+      const date = document.getElementById('daily-date-select').value;
+      if (!date) { document.getElementById('daily-summary-view').innerHTML = ''; return; }
+      try {
+        const result = await apiCall('getDailyRecord', { date });
+        if (!result.records || result.records.length === 0) {
+          document.getElementById('daily-summary-view').innerHTML = '<p style="color:#7f8c8d;">데이터 없음</p>';
+          return;
+        }
+        const rft = result.records.filter(e => e.type === 'RFT').sort((a,b) => a.name.localeCompare(b.name,'ko'));
+        const fes = result.records.filter(e => e.type === 'FES').sort((a,b) => a.name.localeCompare(b.name,'ko'));
+        let html = `<h3>${date} RFT 집계</h3>`;
+        html += `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>회복기</th><th>C</th></tr></thead><tbody>`;
+        rft.forEach(r => { html += `<tr><td>${r.name}</td><td>${r.normal}</td><td>${r.recovery}</td><td>${r.complex}</td></tr>`; });
+        html += '</tbody></table>';
+        html += `<h3 style="margin-top:16px;">${date} FES 집계</h3>`;
+        html += `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
+        fes.forEach(r => { html += `<tr><td>${r.name}</td><td>${r.normal}</td><td>${r.recovery}</td></tr>`; });
+        html += '</tbody></table>';
+        document.getElementById('daily-summary-view').innerHTML = html;
+      } catch(e) { document.getElementById('daily-summary-view').innerHTML = `<p style="color:#e74c3c;">${e.message}</p>`; }
     }
 
     function renderAllTable(containerId, dataMap, isRFT) {
