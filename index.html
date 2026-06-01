@@ -850,9 +850,9 @@
     async function saveNameList() {
       localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
       renderNameList();
-      // 서버에도 저장
+      // 서버에 전용 시트로 저장
       try {
-        await apiCall('saveSettings', {}, { ...APP_SETTINGS, nameList: NAME_LIST.join(',') });
+        await apiCall('saveNameList', {}, { names: NAME_LIST });
       } catch(e) { console.log('서버 저장 실패:', e.message); }
     }
     function renderNameList() {
@@ -933,20 +933,24 @@
       // localStorage에서 이름 먼저 로드
       const savedNames = localStorage.getItem('nameList');
       if (savedNames) NAME_LIST = JSON.parse(savedNames);
-      // 서버에서 설정 + 이름 불러오기 (완료될 때까지 대기)
+      // 서버에서 이름 리스트 불러오기
       try {
-        const settings = await apiCall('getSettings');
-        if (settings.nameList && String(settings.nameList).trim() !== '') {
-          NAME_LIST = String(settings.nameList).split(',').filter(n => n.trim() !== '');
+        const result = await apiCall('getNameList');
+        if (result.names && result.names.length > 0) {
+          NAME_LIST = result.names;
           localStorage.setItem('nameList', JSON.stringify(NAME_LIST));
         }
+      } catch(e) { console.log('이름 리스트 로드 실패:', e.message); }
+      // 서버에서 설정 불러오기
+      try {
+        const settings = await apiCall('getSettings');
         if (settings['4rft']) APP_SETTINGS['4rft'] = Number(settings['4rft']);
         if (settings['4fes']) APP_SETTINGS['4fes'] = Number(settings['4fes']);
         if (settings['5rft']) APP_SETTINGS['5rft'] = Number(settings['5rft']);
         if (settings['5fes']) APP_SETTINGS['5fes'] = Number(settings['5fes']);
         localStorage.setItem('appSettings', JSON.stringify(APP_SETTINGS));
-      } catch(e) { console.log('서버 설정 로드 실패:', e.message); }
-      // 설정 로드 완료 후 페이지 표시
+      } catch(e) { console.log('설정 로드 실패:', e.message); }
+      // 페이지 표시
       showPage('4rft');
     }
     init();
