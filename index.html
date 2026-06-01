@@ -347,7 +347,14 @@
       document.getElementById(`page-${page}`).classList.add('active');
       document.getElementById(`nav-${page}`).classList.add('active');
       const typeMap = { '4rft':'4F_RFT', '4fes':'4F_FES', '5rft':'5F_RFT', '5fes':'5F_FES' };
-      if (typeMap[page]) loadRoomData(typeMap[page]);
+      // 입력 탭: 처음 한 번만 로드 (이미 렌더링 되어있으면 다시 안 불러옴)
+      if (typeMap[page]) {
+        const containerId = `${page}-rooms`;
+        const container = document.getElementById(containerId);
+        if (!container || container.innerHTML === '') {
+          loadRoomData(typeMap[page]);
+        }
+      }
       if (page === 'admin4') { loadSummary('4F_RFT'); loadSummary('4F_FES'); }
       if (page === 'admin5') { loadSummary('5F_RFT'); loadSummary('5F_FES'); }
       if (page === 'all') loadAllSummary();
