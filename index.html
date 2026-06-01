@@ -698,7 +698,7 @@
       let html;
       if (isRFT) {
         html = `<table class="summary-table"><thead><tr>
-          <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
+          <th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>C(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>C(EMR)</th><th>일반</th><th>회복기</th><th>C</th>
         </tr></thead><tbody>`;
       } else {
         html = `<table class="summary-table"><thead><tr>
@@ -722,11 +722,11 @@
         const nameLabel = row.missingInRoom ? `${row.name} ⚠️` : row.name;
         if (isRFT) {
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
-            <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td>
-            <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
+            <td>${row.roomNormal}</td><td>${row.roomRecovery}</td><td>${row.roomComplex}</td>
+            <td>${row.emrNormal}</td><td>${row.emrRecovery}</td><td>${row.emrComplex}</td>
             <td class="${nc}">${fmtDiff(nDiff)}</td>
-            <td class="${cc}">${fmtDiff(cDiff)}</td>
-            <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
+            <td class="${rc}">${fmtDiff(rDiff)}</td>
+            <td class="${cc}">${fmtDiff(cDiff)}</td></tr>`;
         } else {
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomRecovery}</td>
@@ -738,8 +738,8 @@
       const grandTotal = totalRoomN + totalRoomR + (isRFT ? totalRoomC : 0);
       if (isRFT) {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
-          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomC}</td><td>${totalRoomR}</td>
-          <td>${totalEmrN}</td><td>${totalEmrC}</td><td>${totalEmrR}</td><td></td><td></td><td></td></tr>`;
+          <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td><td>${totalRoomC}</td>
+          <td>${totalEmrN}</td><td>${totalEmrR}</td><td>${totalEmrC}</td><td></td><td></td><td></td></tr>`;
       } else {
         html += `<tr style="background:#f0f0f0;font-weight:bold;">
           <td>합계</td><td>${totalRoomN}</td><td>${totalRoomR}</td>
@@ -815,8 +815,8 @@
       if (sorted.length === 0) { document.getElementById(containerId).innerHTML = '<p style="color:#7f8c8d;">데이터 없음</p>'; return; }
       let html;
       if (isRFT) {
-        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>C</th><th>회복기</th></tr></thead><tbody>`;
-        sorted.forEach(([name, d]) => { html += `<tr><td><strong>${name}</strong></td><td>${d.normal}</td><td>${d.complex}</td><td>${d.recovery}</td></tr>`; });
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>회복기</th><th>C</th></tr></thead><tbody>`;
+        sorted.forEach(([name, d]) => { html += `<tr><td><strong>${name}</strong></td><td>${d.normal}</td><td>${d.recovery}</td><td>${d.complex}</td></tr>`; });
       } else {
         html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
         sorted.forEach(([name, d]) => { html += `<tr><td><strong>${name}</strong></td><td>${d.normal}</td><td>${d.recovery}</td></tr>`; });
@@ -860,13 +860,13 @@
 
       let html;
       if (isRFT) {
-        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th></tr></thead><tbody>`;
+        html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>C(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>C(EMR)</th><th>일반</th><th>회복기</th><th>C</th></tr></thead><tbody>`;
         rows.forEach(r => {
           if (r.room.normal===0&&r.room.recovery===0&&r.room.complex===0&&r.emr.normal===0&&r.emr.recovery===0&&r.emr.complex===0) return;
           const nD=r.room.normal-r.emr.normal, cD=r.room.complex-r.emr.complex, rD=r.room.recovery-r.emr.recovery;
           const f=(d)=>d===0?'O':(d>0?`+${d}`:`${d}`);
           const nc=nD!==0?'error-cell':'ok-cell', cc=cD!==0?'error-cell':'ok-cell', rc=rD!==0?'error-cell':'ok-cell';
-          html += `<tr><td><strong>${r.name}</strong></td><td>${r.room.normal}</td><td>${r.room.complex}</td><td>${r.room.recovery}</td><td>${r.emr.normal}</td><td>${r.emr.complex}</td><td>${r.emr.recovery}</td><td class="${nc}">${f(nD)}</td><td class="${cc}">${f(cD)}</td><td class="${rc}">${f(rD)}</td></tr>`;
+          html += `<tr><td><strong>${r.name}</strong></td><td>${r.room.normal}</td><td>${r.room.recovery}</td><td>${r.room.complex}</td><td>${r.emr.normal}</td><td>${r.emr.recovery}</td><td>${r.emr.complex}</td><td class="${nc}">${f(nD)}</td><td class="${rc}">${f(rD)}</td><td class="${cc}">${f(cD)}</td></tr>`;
         });
       } else {
         html = `<table class="summary-table"><thead><tr><th>이름</th><th>일반(입력)</th><th>회복기(입력)</th><th>일반(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>회복기</th></tr></thead><tbody>`;
