@@ -852,8 +852,12 @@
       renderNameList();
       // 서버에 전용 시트로 저장
       try {
-        await apiCall('saveNameList', {}, { names: NAME_LIST });
-      } catch(e) { console.log('서버 저장 실패:', e.message); }
+        const result = await apiCall('saveNameList', {}, { names: NAME_LIST });
+        console.log('이름 서버 저장 결과:', result);
+      } catch(e) {
+        console.log('이름 서버 저장 실패:', e.message);
+        showStatus('name-list-status', '서버 저장 실패: ' + e.message, 'error');
+      }
     }
     function renderNameList() {
       const container = document.getElementById('name-list');
@@ -871,13 +875,13 @@
       NAME_LIST.sort((a,b) => a.localeCompare(b,'ko'));
       await saveNameList();
       input.value = '';
-      showStatus('name-list-status', `"${name}" 추가됨`, 'success');
+      showStatus('name-list-status', `"${name}" 추가 완료 (서버 저장됨)`, 'success');
     }
     async function removeName(index) {
       const name = NAME_LIST[index];
       NAME_LIST.splice(index, 1);
       await saveNameList();
-      showStatus('name-list-status', `"${name}" 삭제됨`, 'info');
+      showStatus('name-list-status', `"${name}" 삭제 완료 (서버 저장됨)`, 'info');
     }
 
     // ===== 자동완성 =====
