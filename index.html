@@ -202,28 +202,8 @@
         <div class="actions" style="margin-bottom:16px;">
           <button class="btn btn-primary" onclick="loadAllSummary()">전체 집계 새로고침</button>
         </div>
-        <h3>4층 RFT</h3>
-        <div id="all-4rft-totals" class="totals-box"></div>
-        <div id="all-4rft-summary"></div>
-      </div>
-      <div class="card">
-        <h3>4층 FES</h3>
-        <div id="all-4fes-totals" class="totals-box"></div>
-        <div id="all-4fes-summary"></div>
-      </div>
-      <div class="card">
-        <h3>5층 RFT</h3>
-        <div id="all-5rft-totals" class="totals-box"></div>
-        <div id="all-5rft-summary"></div>
-      </div>
-      <div class="card">
-        <h3>5층 FES</h3>
-        <div id="all-5fes-totals" class="totals-box"></div>
-        <div id="all-5fes-summary"></div>
-      </div>
-      <div class="card">
-        <h2>전체 합산</h2>
         <div id="all-grand-totals" class="totals-box"></div>
+        <div id="all-merged-summary"></div>
       </div>
     </div>
     <!-- 설정 -->
@@ -364,16 +344,12 @@
       document.getElementById(`page-${page}`).classList.add('active');
       document.getElementById(`nav-${page}`).classList.add('active');
       const typeMap = { '4rft':'4F_RFT', '4fes':'4F_FES', '5rft':'5F_RFT', '5fes':'5F_FES' };
-      // 입력 탭: 이미 데이터가 있으면 유지, 없으면 서버에서 로드
+      // 입력 탭: 처음 로드 시 서버에서 불러옴, 이후 탭 이동 시 유지
       if (typeMap[page]) {
         const containerId = `${page}-rooms`;
         const container = document.getElementById(containerId);
         if (!container || container.innerHTML === '') {
           loadRoomData(typeMap[page]);
-        } else {
-          // 이미 렌더링됨 - 입력값이 있는지 확인
-          const firstInput = container.querySelector('input[type="text"]');
-          if (!firstInput) loadRoomData(typeMap[page]);
         }
       }
       if (page === 'admin4') { loadSummary('4F_RFT'); loadSummary('4F_FES'); }
@@ -693,6 +669,10 @@
         const nc = row.normalError ? 'error-cell' : 'ok-cell';
         const rc = row.recoveryError ? 'error-cell' : 'ok-cell';
         const cc = row.complexError ? 'error-cell' : 'ok-cell';
+        const nDiff = row.roomNormal - row.emrNormal;
+        const rDiff = row.roomRecovery - row.emrRecovery;
+        const cDiff = row.roomComplex - row.emrComplex;
+        const fmtDiff = (d) => d === 0 ? 'O' : (d > 0 ? `+${d}` : `${d}`);
         const roomTotal = row.roomNormal + row.roomRecovery + (isRFT ? row.roomComplex : 0);
         totalRoomN += row.roomNormal; totalRoomR += row.roomRecovery; totalRoomC += row.roomComplex;
         totalEmrN += row.emrNormal; totalEmrR += row.emrRecovery; totalEmrC += row.emrComplex;
@@ -702,15 +682,15 @@
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${roomTotal}</strong></td>
             <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
-            <td class="${nc}">${row.normalError?'오류':'O'}</td>
-            <td class="${cc}">${row.complexError?'오류':'O'}</td>
-            <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
+            <td class="${nc}">${fmtDiff(nDiff)}</td>
+            <td class="${cc}">${fmtDiff(cDiff)}</td>
+            <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
         } else {
           html += `<tr${rowStyle}><td><strong>${nameLabel}</strong></td>
             <td>${row.roomNormal}</td><td>${row.roomRecovery}</td>
             <td>${row.emrNormal}</td><td>${row.emrRecovery}</td>
-            <td class="${nc}">${row.normalError?'오류':'O'}</td>
-            <td class="${rc}">${row.recoveryError?'오류':'O'}</td></tr>`;
+            <td class="${nc}">${fmtDiff(nDiff)}</td>
+            <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
         }
       });
       const grandTotal = totalRoomN + totalRoomR + (isRFT ? totalRoomC : 0);
@@ -742,28 +722,77 @@
     async function loadAllSummary() {
       const types = ['4F_RFT','4F_FES','5F_RFT','5F_FES'];
       let gN=0, gR=0, gC=0;
+      const mergedMap = {}; // 이름별 합산
+
       for (const type of types) {
-        const pageKey = getPageKey(type);
-        const isRFT = type.includes('RFT');
         try {
           const data = await apiCall('getSummary', { type });
           if (data.totals) {
-            renderTotals(`all-${pageKey}-totals`, data.totals, isRFT);
             gN += data.totals.totalNormal;
             gR += data.totals.totalRecovery;
             gC += data.totals.totalComplex;
           }
-          renderComparison(`all-${pageKey}-summary`, data.comparisonAll || data.comparison, isRFT);
-        } catch (e) {
-          document.getElementById(`all-${pageKey}-summary`).innerHTML = `<p style="color:#e74c3c;">${e.message}</p>`;
-        }
+          // 전체 비교 데이터 합산
+          const compData = data.comparisonAll || data.comparison || [];
+          compData.forEach(row => {
+            if (!mergedMap[row.name]) {
+              mergedMap[row.name] = { roomNormal:0, roomRecovery:0, roomComplex:0, emrNormal:0, emrRecovery:0, emrComplex:0 };
+            }
+            mergedMap[row.name].roomNormal += row.roomNormal || 0;
+            mergedMap[row.name].roomRecovery += row.roomRecovery || 0;
+            mergedMap[row.name].roomComplex += row.roomComplex || 0;
+            mergedMap[row.name].emrNormal += row.emrNormal || 0;
+            mergedMap[row.name].emrRecovery += row.emrRecovery || 0;
+            mergedMap[row.name].emrComplex += row.emrComplex || 0;
+          });
+        } catch (e) { console.log(e.message); }
       }
+
+      // 총합 표시
       document.getElementById('all-grand-totals').innerHTML = `
         <div class="total-item"><div class="label">전체 일반</div><div class="value" style="color:#2980b9;font-size:26px;">${gN}</div></div>
         <div class="total-item"><div class="label">전체 회복기</div><div class="value" style="color:#27ae60;font-size:26px;">${gR}</div></div>
         <div class="total-item"><div class="label">전체 C</div><div class="value" style="color:#8e44ad;font-size:26px;">${gC}</div></div>
         <div class="total-item"><div class="label">전체 총합</div><div class="value" style="color:#2c3e50;font-size:26px;">${gN+gR+gC}</div></div>
       `;
+
+      // 합산 테이블 (가나다순)
+      const merged = Object.entries(mergedMap).map(([name, d]) => ({
+        name, ...d,
+        normalError: d.roomNormal !== d.emrNormal,
+        recoveryError: d.roomRecovery !== d.emrRecovery,
+        complexError: d.roomComplex !== d.emrComplex
+      }));
+      merged.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+      let html = `<table class="summary-table"><thead><tr>
+        <th>이름</th><th>일반(입력)</th><th>C(입력)</th><th>회복기(입력)</th><th>합계</th><th>일반(EMR)</th><th>C(EMR)</th><th>회복기(EMR)</th><th>일반</th><th>C</th><th>회복기</th>
+      </tr></thead><tbody>`;
+      let tRN=0,tRC=0,tRR=0,tEN=0,tEC=0,tER=0;
+      merged.forEach(row => {
+        if (row.roomNormal===0 && row.roomRecovery===0 && row.roomComplex===0 && row.emrNormal===0 && row.emrRecovery===0 && row.emrComplex===0) return;
+        const nc = row.normalError ? 'error-cell' : 'ok-cell';
+        const rc = row.recoveryError ? 'error-cell' : 'ok-cell';
+        const cc = row.complexError ? 'error-cell' : 'ok-cell';
+        const nDiff = row.roomNormal - row.emrNormal;
+        const cDiff = row.roomComplex - row.emrComplex;
+        const rDiff = row.roomRecovery - row.emrRecovery;
+        const fmtDiff = (d) => d === 0 ? 'O' : (d > 0 ? `+${d}` : `${d}`);
+        const total = row.roomNormal + row.roomComplex + row.roomRecovery;
+        tRN+=row.roomNormal; tRC+=row.roomComplex; tRR+=row.roomRecovery;
+        tEN+=row.emrNormal; tEC+=row.emrComplex; tER+=row.emrRecovery;
+        html += `<tr><td><strong>${row.name}</strong></td>
+          <td>${row.roomNormal}</td><td>${row.roomComplex}</td><td>${row.roomRecovery}</td><td><strong>${total}</strong></td>
+          <td>${row.emrNormal}</td><td>${row.emrComplex}</td><td>${row.emrRecovery}</td>
+          <td class="${nc}">${fmtDiff(nDiff)}</td>
+          <td class="${cc}">${fmtDiff(cDiff)}</td>
+          <td class="${rc}">${fmtDiff(rDiff)}</td></tr>`;
+      });
+      html += `<tr style="background:#f0f0f0;font-weight:bold;">
+        <td>합계</td><td>${tRN}</td><td>${tRC}</td><td>${tRR}</td><td>${tRN+tRC+tRR}</td>
+        <td>${tEN}</td><td>${tEC}</td><td>${tER}</td><td></td><td></td><td></td></tr>`;
+      html += '</tbody></table>';
+      document.getElementById('all-merged-summary').innerHTML = html;
     }
 
     // ===== 설정 =====
