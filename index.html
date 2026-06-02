@@ -590,10 +590,22 @@
         const data = await apiCall('getRooms', { type });
         if (data.rooms) {
           data.rooms.forEach(entry => {
-            const nameEl = document.getElementById(`${type}-${entry.room}-${entry.time}-name`);
-            const normalEl = document.getElementById(`${type}-${entry.room}-${entry.time}-normal`);
-            const recoveryEl = document.getElementById(`${type}-${entry.room}-${entry.time}-recovery`);
-            const complexEl = document.getElementById(`${type}-${entry.room}-${entry.time}-complex`);
+            // 시간 값 정규화
+            let timeStr = String(entry.time).trim();
+            // Date 객체나 긴 문자열이면 시:분만 추출
+            const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+            if (match) {
+              let hour = parseInt(match[1]);
+              const min = match[2];
+              // 24시간 형식이면 12시간으로 (13:20 → 1:20)
+              if (hour > 12) hour -= 12;
+              // 08:30 → 8:30
+              timeStr = `${hour}:${min}`;
+            }
+            const nameEl = document.getElementById(`${type}-${entry.room}-${timeStr}-name`);
+            const normalEl = document.getElementById(`${type}-${entry.room}-${timeStr}-normal`);
+            const recoveryEl = document.getElementById(`${type}-${entry.room}-${timeStr}-recovery`);
+            const complexEl = document.getElementById(`${type}-${entry.room}-${timeStr}-complex`);
             if (nameEl) nameEl.value = entry.name || '';
             if (normalEl) normalEl.value = entry.normal || '';
             if (recoveryEl) recoveryEl.value = entry.recovery || '';
