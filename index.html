@@ -586,17 +586,7 @@
         if (data.rooms) {
           data.rooms.forEach(entry => {
             // 시간 값 정규화
-            let timeStr = String(entry.time).trim();
-            // Date 객체나 긴 문자열이면 시:분만 추출
-            const match = timeStr.match(/(\d{1,2}):(\d{2})/);
-            if (match) {
-              let hour = parseInt(match[1]);
-              const min = match[2];
-              // 24시간 형식이면 12시간으로 (13:20 → 1:20)
-              if (hour > 12) hour -= 12;
-              // 08:30 → 8:30
-              timeStr = `${hour}:${min}`;
-            }
+            let timeStr = normalizeTime(entry.time);
             const nameEl = document.getElementById(`${type}-${entry.room}-${timeStr}-name`);
             const normalEl = document.getElementById(`${type}-${entry.room}-${timeStr}-normal`);
             const recoveryEl = document.getElementById(`${type}-${entry.room}-${timeStr}-recovery`);
@@ -608,6 +598,34 @@
           });
         }
       } catch (e) { console.log('로드 실패:', e.message); }
+    }
+
+    function normalizeTime(timeVal) {
+      const t = String(timeVal).trim();
+      // 이미 정상 형태 (8:30, 9:00 등)
+      if (/^\d{1,2}:\d{2}$/.test(t)) return t;
+      // ISO 날짜 형태에서 시간 추출 (1899-12-30T08:30:00.000Z)
+      const isoMatch = t.match(/T(\d{2}):(\d{2})/);
+      if (isoMatch) {
+        let hour = parseInt(isoMatch[1]);
+        const min = isoMatch[2];
+        // Google Sheets 시간 변환 문제 대응
+        // 8:30 → 08:30, 9:00 → 09:00, 9:35 → 09:35, 10:05 → 10:05
+        // 1:20 → 01:20 또는 13:20
+        if (hour > 12) hour -= 12;
+        if (hour === 0) hour = 12;
+        return `${hour}:${min}`;
+      }
+      // 숫자인 경우 (시간이 소수로 저장된 경우: 0.354166... = 8:30)
+      const num = parseFloat(t);
+      if (!isNaN(num) && num < 1) {
+        const totalMinutes = Math.round(num * 24 * 60);
+        let hour = Math.floor(totalMinutes / 60);
+        const min = totalMinutes % 60;
+        if (hour > 12) hour -= 12;
+        return `${hour}:${min.toString().padStart(2,'0')}`;
+      }
+      return t;
     }
 
     async function saveRoomData(type) {
