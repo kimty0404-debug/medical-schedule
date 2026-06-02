@@ -382,14 +382,9 @@
       document.getElementById(`page-${page}`).classList.add('active');
       document.getElementById(`nav-${page}`).classList.add('active');
       const typeMap = { '4rft':'4F_RFT', '4fes':'4F_FES', '5rft':'5F_RFT', '5fes':'5F_FES' };
-      // 입력 탭: 처음 열 때 서버에서 불러옴
+      // 입력 탭: 첫 로드 시 서버에서 불러옴, 이후 탭 이동 시 유지
       if (typeMap[page]) {
-        const pageKey = page;
-        if (!window._loadedPages) window._loadedPages = {};
-        if (!window._loadedPages[pageKey]) {
-          window._loadedPages[pageKey] = true;
-          loadRoomData(typeMap[page]);
-        }
+        loadRoomData(typeMap[page]);
       }
       if (page === 'admin4') { loadSummary('4F_RFT'); loadSummary('4F_FES'); }
       if (page === 'admin5') { loadSummary('5F_RFT'); loadSummary('5F_FES'); }
