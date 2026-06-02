@@ -602,28 +602,29 @@
 
     function normalizeTime(timeVal) {
       const t = String(timeVal).trim();
+      // t접두사 제거 (새 형식: t8:30)
+      if (t.startsWith('t') && t.includes(':')) return t.substring(1);
       // 이미 정상 형태 (8:30, 9:00 등)
       if (/^\d{1,2}:\d{2}$/.test(t)) return t;
-      // ISO 날짜 형태에서 시간 추출 (1899-12-30T08:30:00.000Z)
+      // ISO 날짜 형태 (1899-12-30T00:02:08.000Z) — 시간 비율로 계산
+      if (t.includes('1899')) {
+        // Google Sheets는 시간을 하루의 비율로 저장
+        // 1899-12-30 기준으로 실제 시간 추출
+        const d = new Date(t);
+        let hours = d.getUTCHours();
+        let mins = d.getUTCMinutes();
+        // UTC 시간이 실제 입력 시간
+        if (hours === 0 && mins === 0) return t; // 매칭 불가
+        if (hours > 12) hours -= 12;
+        return `${hours}:${mins.toString().padStart(2,'0')}`;
+      }
+      // 일반 ISO에서 시간 추출
       const isoMatch = t.match(/T(\d{2}):(\d{2})/);
       if (isoMatch) {
         let hour = parseInt(isoMatch[1]);
         const min = isoMatch[2];
-        // Google Sheets 시간 변환 문제 대응
-        // 8:30 → 08:30, 9:00 → 09:00, 9:35 → 09:35, 10:05 → 10:05
-        // 1:20 → 01:20 또는 13:20
         if (hour > 12) hour -= 12;
-        if (hour === 0) hour = 12;
         return `${hour}:${min}`;
-      }
-      // 숫자인 경우 (시간이 소수로 저장된 경우: 0.354166... = 8:30)
-      const num = parseFloat(t);
-      if (!isNaN(num) && num < 1) {
-        const totalMinutes = Math.round(num * 24 * 60);
-        let hour = Math.floor(totalMinutes / 60);
-        const min = totalMinutes % 60;
-        if (hour > 12) hour -= 12;
-        return `${hour}:${min.toString().padStart(2,'0')}`;
       }
       return t;
     }
